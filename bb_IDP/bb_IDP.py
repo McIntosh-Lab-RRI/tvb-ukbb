@@ -21,51 +21,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 import os.path
 import sys
 import json
+import bb_pipeline_tools.bb_logging_tool as lt
 
 sys.path.insert(1, os.path.dirname(__file__) + "/..")
-import bb_pipeline_tools.bb_logging_tool as LT
 
 
-def bb_IDP(subject, fileConfiguration):
+def bb_idp(subject):
+    logger = logging.getLogger()
 
-    logger = LT.initLogging(__file__, subject)
-    logDir = logger.logDir
-    baseDir = logDir[0 : logDir.rfind("/logs/")]
-
-    subname = subject.replace("/", "_")
+    subject_name = subject.replace("/", "_")
 
     print("Running IDP pipeline...")
-    jobIDP = LT.runCommand(
-        logger,
-        "$BB_BIN_DIR/bb_IDP/bb_IDP "
-        + subject,
-        "bb_IDP_"
-        + subname
+    job_idp = lt.run_command(
+        logger, "$BB_BIN_DIR/bb_IDP/bb_IDP " + subject, "bb_IDP_" + subject_name
     )
     print("IDP pipeline complete.")
-    return jobIDP
+    return job_idp
 
 
 if __name__ == "__main__":
     # grab subject name from command
-    subject = sys.argv[1]
+    subject_ = sys.argv[1]
     fd_fileName = "logs/file_descriptor.json"
 
     # check if subject directory exists
-    if not os.path.isdir(subject):
-        print(f"{subject} is not a valid directory. Exiting")
+    json_path_name = f"./{subject_}/{fd_fileName}"
+    if not os.path.isdir(subject_):
+        print(f"{subject_} is not a valid directory. Exiting")
         sys.exit(1)
     # attempt to open the JSON file
     try:
-        json_path = os.path.abspath(f"./{subject}/{fd_fileName}")
-        with open(json_path, "r") as f:
+        json_path = os.path.abspath(json_path_name)
+        with open(json_path_name, "r") as f:
             fileConfig = json.load(f)
-    except:
-        print(f"{json_path} could not be loaded. Exiting")
+    except Exception:
+        print(f"{json_path_name} could not be loaded. Exiting")
         sys.exit(1)
+
     # call pipeline
-    bb_IDP(subject, fileConfig)
+    bb_idp(subject_)

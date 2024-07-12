@@ -2,7 +2,7 @@
 #
 # Script name: IDP_html_gen.py
 #
-# Description: Script to generate IDP page of QC html report. 
+# Description: Script to generate IDP page of QC html report.
 #
 ## Author: Justin Wang
 
@@ -13,11 +13,9 @@ import os
 
 
 
-
-
-def IDP_html_gen(subj,PARC_NAME):
+def IDP_html_gen(subj, PARC_NAME):
     """Function that generates the IDP page of the QC report for a
-    subject. 
+    subject.
 
     TODO: remove duplicate code by having a single function used
             twice - once for low-priority and once for high
@@ -31,24 +29,23 @@ def IDP_html_gen(subj,PARC_NAME):
 
     """
 
-    #remove trailing forward slashes in subject paths
+    # remove trailing forward slashes in subject paths
     if subj.endswith("/"):
         subj = subj[:-1]
 
     QC_dir = subj + "/QC/html/"
     IDP_dir = subj + "/IDP_files/"
 
+    # save IDPois to txt files for future reference
+    priority_output = pd.read_csv(r"" + IDP_dir + "priority_IDPs.tsv", delimiter="\t")
+    non_priority_output = pd.read_csv(
+        r"" + IDP_dir + "non_priority_IDPs.tsv", delimiter="\t"
+    )
+    new_IDP_output = pd.read_csv(r"" + IDP_dir + "tvb_new_IDPs.tsv", delimiter="\t")
 
-    #save IDPois to txt files for future reference
-    priority_output = pd.read_csv(r"" + IDP_dir + "priority_IDPs.tsv", delimiter = "\t")
-    non_priority_output = pd.read_csv(r"" + IDP_dir + "non_priority_IDPs.tsv", delimiter = "\t")
-    new_IDP_output = pd.read_csv(r"" + IDP_dir + "tvb_new_IDPs.tsv", delimiter = "\t")
+    subjname = os.path.basename(subj)
 
-
-    subjname=os.path.basename(subj)
-
-
-    #write IDP.html with IDP information
+    # write IDP.html with IDP information
     f = open(QC_dir + "IDP.html", "a")
 
     message = (
@@ -82,8 +79,13 @@ def IDP_html_gen(subj,PARC_NAME):
           <h1 class="w3-hide-medium w3-hide-small w3-xxxlarge">IDP IMAGE REPORT</h1>
           <h5 class="w3-hide-large" style="white-space:nowrap">IDP IMAGE REPORT</h5>
           
-          <h3 class="w3-hide-medium w3-hide-small">"""+subjname+"""</h3>
-          <h5 class="w3-hide-medium w3-hide-small">Parcellation - """+PARC_NAME+"""</h5>
+
+          <h3 class="w3-hide-medium w3-hide-small">"""
+        + subjname
+        + """</h3>
+          <h5 class="w3-hide-medium w3-hide-small">Parcellation - """
+        + PARC_NAME
+        + """</h5>
           
         </div>
      
@@ -142,7 +144,10 @@ def IDP_html_gen(subj,PARC_NAME):
 	  <h1> IDP REPORTS </h1>
       <h1>
     <div style="font-size: 20px" > Parcellation: <select name="menu1" id="menu1" onkeydown="IgnoreAlpha(event);">
-      <option selected="selected">"""+PARC_NAME+"""</option>
+
+      <option selected="selected">"""
+        + PARC_NAME
+        + """</option>
       <option id="option_placeholder">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</option>
       <!-- DO NOT REMOVE. PLACEHOLDER FOR SCRIPTS TO INSERT NEW PARC LINKS -->
 
@@ -196,22 +201,23 @@ def IDP_html_gen(subj,PARC_NAME):
 
     f.write(message)
 
-
-    #write priority df
-    #background-color:darkred or darkgreen depending on value
+    # write priority df
+    # background-color:darkred or darkgreen depending on value
     for index, row in priority_output.iterrows():
-        color=""
+        color = ""
         try:
-            if str(row["flag"])=="True":
-                color="background-color:darkred"
+            if str(row["flag"]) == "True":
+                color = "background-color:darkred"
 
-            if str(row["flag"])=="False":
-                color="background-color:darkgreen"
+            if str(row["flag"]) == "False":
+                color = "background-color:darkgreen"
         except:
             print("Error: no flag column")
         message = (
             """
-			<tr style="display: none; """+ color+"""" name="High-priority IDPs">
+			<tr style="display: none; """
+            + color
+            + """" name="High-priority IDPs">
 
 			  <td>"""
             + str(row["short"])
@@ -220,9 +226,7 @@ def IDP_html_gen(subj,PARC_NAME):
             + str(row["category"])
             + """</td>
 			  <td>"""
-
             + str("{:e}".format(float(row["value"])))
-
             + """</td>
 			  <td>"""
             + str(row["unit"])
@@ -233,23 +237,23 @@ def IDP_html_gen(subj,PARC_NAME):
         )
         f.write(message)
 
-
-
-    #write new df in the same table
+    # write new df in the same table
     for index, row in new_IDP_output.iterrows():
-        color=""
-        
-        try:
-            if row["flag"]=="TRUE":
-                color="darkred"
+        color = ""
 
-            if row["flag"]=="FALSE":
-                color="darkgreen"
+        try:
+            if row["flag"] == "TRUE":
+                color = "darkred"
+
+            if row["flag"] == "FALSE":
+                color = "darkgreen"
         except:
             print("Error: no flag column")
         message = (
             """
-            <tr style="display: none; """+ color+"""" name="New TVB IDPs">
+            <tr style="display: none; """
+            + color
+            + """" name="New TVB IDPs">
               <td>"""
             + str(row["short"])
             + """</td>
@@ -268,25 +272,24 @@ def IDP_html_gen(subj,PARC_NAME):
         )
         f.write(message)
 
-
-
-
-    #write non-priority df in the same table
+    # write non-priority df in the same table
     for index, row in non_priority_output.iterrows():
-        color=""
-        
-        try:
-            if row["flag"]=="TRUE":
-                color="darkred"
+        color = ""
 
-            if row["flag"]=="FALSE":
-                color="darkgreen"
+        try:
+            if row["flag"] == "TRUE":
+                color = "darkred"
+
+            if row["flag"] == "FALSE":
+                color = "darkgreen"
         except:
             print("Error: no flag column")
-            
+
         message = (
             """
-			<tr style="display: none; """+ color+"""" name="Low-priority IDPs">
+			<tr style="display: none; """
+            + color
+            + """" name="Low-priority IDPs">
 
 			  <td>"""
             + str(row["short"])
@@ -295,9 +298,7 @@ def IDP_html_gen(subj,PARC_NAME):
             + str(row["category"])
             + """</td>
 			  <td>"""
-
             + str("{:e}".format(float(row["value"])))
-
             + """</td>
 			  <td>"""
             + str(row["unit"])
@@ -308,14 +309,8 @@ def IDP_html_gen(subj,PARC_NAME):
         )
         f.write(message)
 
-
-
-
-
-
-
-
-    message = (""" </table>
+    message = (
+        """ </table>
 
 
     <br>
@@ -323,21 +318,30 @@ def IDP_html_gen(subj,PARC_NAME):
     <br>
 
     <br>
-    <a href="../../IDP_files_"""+PARC_NAME+"""/" id="hi_IDP" class="w3-bar-item w3-button">High-Priority IDPs: """
+
+    <a href="../../IDP_files_"""
+        + PARC_NAME
+        + """/" id="hi_IDP" class="w3-bar-item w3-button">High-Priority IDPs: """
         + str(IDP_dir)[:-1]
         + "_"
         + PARC_NAME
         + "/priority_IDPs.tsv"
         + """</a>
     <br>
-    <a href="../../IDP_files_"""+PARC_NAME+"""/" id="new_IDP" class="w3-bar-item w3-button">New TVB IDPs: """
+
+    <a href="../../IDP_files_"""
+        + PARC_NAME
+        + """/" id="new_IDP" class="w3-bar-item w3-button">New TVB IDPs: """
         + str(IDP_dir)[:-1]
         + "_"
         + PARC_NAME
         + "/tvb_new_IDPs.tsv"
         + """</a>
     <br>
-    <a href="../../IDP_files_"""+PARC_NAME+"""/" id="low_IDP" class="w3-bar-item w3-button">Lower-priority IDPs: """
+
+    <a href="../../IDP_files_"""
+        + PARC_NAME
+        + """/" id="low_IDP" class="w3-bar-item w3-button">Lower-priority IDPs: """
         + str(IDP_dir)[:-1]
         + "_"
         + PARC_NAME
@@ -345,7 +349,10 @@ def IDP_html_gen(subj,PARC_NAME):
         + """</a>
     <br>
 
-    <a href="../../IDP_files_"""+PARC_NAME+"""/" id="combo_IDP" class="w3-bar-item w3-button">Combination of the above IDPs: """
+
+    <a href="../../IDP_files_"""
+        + PARC_NAME
+        + """/" id="combo_IDP" class="w3-bar-item w3-button">Combination of the above IDPs: """
         + str(IDP_dir)[:-1]
         + "_"
         + PARC_NAME
@@ -384,8 +391,7 @@ def IDP_html_gen(subj,PARC_NAME):
 	</html>
 
 	 """
-
-     )
+    )
 
     f.write(message)
 
@@ -393,24 +399,24 @@ def IDP_html_gen(subj,PARC_NAME):
 
 
 if __name__ == "__main__":
+    """Generates IDP.html of the QC report using IDP txts.
 
-    """Generates IDP.html of the QC report using IDP txts. 
 
 
-    
     Usage
     ----------
 
-    python  IDP_html_gen.py  subj  
+    python  IDP_html_gen.py  subj
 
-    
+
 
     Arguments
     ----------
-    subj : 
+    subj :
         Full path to subject's directory.
 
 
     """
     # try:
-    IDP_html_gen(sys.argv[1],sys.argv[2])
+
+    IDP_html_gen(sys.argv[1], sys.argv[2])

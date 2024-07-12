@@ -13,6 +13,7 @@ import os, sys, argparse
 sys.path.insert(1, os.path.dirname(__file__) + "/..")
 import bb_pipeline_tools.bb_logging_tool as LT
 import bb_pipeline_tools.bb_file_manager as FM
+import logging
 
 
 class MyParser(argparse.ArgumentParser):
@@ -28,9 +29,8 @@ class Usage(Exception):
 
 
 def bb_pipeline_FS(subject, jobHold, fileConfiguration):
-
-    logger = LT.initLogging(__file__, subject)
-    logDir = logger.logDir
+    logger = logging.getLogger()
+    logDir = logger.log_dir
     baseDir = logDir[0 : logDir.rfind("/logs/")]
 
     subname = subject.replace("/", "_")
@@ -39,32 +39,31 @@ def bb_pipeline_FS(subject, jobHold, fileConfiguration):
         logger.error(
             "There is no T1. FreeSurfer for subject " + subject + " cannot be run."
         )
-        LT.finishLogging(logger)
+        LT.finish_logging(logger)
         return -1
 
     else:
-        jobFS01 = LT.runCommand(
+        jobFS01 = LT.run_command(
             logger,
             "$BB_BIN_DIR/bb_FS_pipeline/bb_FS_run.sh  " + subject,
             "bb_FS_run_" + subname,
         )
-        jobFS02 = LT.runCommand(
+        jobFS02 = LT.run_command(
             logger,
             "$BB_BIN_DIR/bb_FS_pipeline/bb_FS_segm.sh " + subject,
             "bb_FS_segm_" + subname,
         )
-        jobFS03 = LT.runCommand(
+        jobFS03 = LT.run_command(
             logger,
             "$BB_BIN_DIR/bb_FS_pipeline/bb_FS_get_IDPs.py " + subject,
             "bb_FS_IDPs_" + subname,
         )
 
-        LT.finishLogging(logger)
+        LT.finish_logging(logger)
         return jobFS03
 
 
 def main():
-
     parser = MyParser(description="BioBank FreeSurfer Tool")
     parser.add_argument("subjectFolder", help="Subject Folder")
 

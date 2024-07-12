@@ -22,67 +22,80 @@
 #
 import json
 import numbers
-import sys,argparse,os.path
+import sys, argparse, os.path
 
 
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
+
 def bb_read_json_field(fileName, fieldName, rounding=0, multFactor=1):
-    
-    result=[]    
+    result = []
     with open(fileName) as data_file:
-        data=json.load(data_file)
+        data = json.load(data_file)
 
     if fieldName in data.keys():
-        value=data[fieldName]
+        value = data[fieldName]
         if isinstance(value, numbers.Number):
-            if rounding !=0:
-                result=round(data[fieldName]*multFactor,rounding)
+            if rounding != 0:
+                result = round(data[fieldName] * multFactor, rounding)
             else:
-                result=data[fieldName]*multFactor
+                result = data[fieldName] * multFactor
         else:
-            result=str(data[fieldName])
+            result = str(data[fieldName])
 
     return result
 
 
-def main(): 
-    
-    parser = MyParser(description='BioBank Dicom Header Reader')
-    parser.add_argument('-F', dest="file", type=str, nargs=1, help='Read json file')
-    parser.add_argument('-f', dest="field", type=str, nargs=1, default="NONE", help='Read field')
-    parser.add_argument('-r', dest="rounding", type=int, default=0, help='Round the value the selected number of decimals (Default: No rounding')
-    parser.add_argument('-m', dest="multFactor",  type=float, default=1, help='Multiplication factor for the selected value (Default 1)')
+def main():
+    parser = MyParser(description="BioBank Dicom Header Reader")
+    parser.add_argument("-F", dest="file", type=str, nargs=1, help="Read json file")
+    parser.add_argument(
+        "-f", dest="field", type=str, nargs=1, default="NONE", help="Read field"
+    )
+    parser.add_argument(
+        "-r",
+        dest="rounding",
+        type=int,
+        default=0,
+        help="Round the value the selected number of decimals (Default: No rounding",
+    )
+    parser.add_argument(
+        "-m",
+        dest="multFactor",
+        type=float,
+        default=1,
+        help="Multiplication factor for the selected value (Default 1)",
+    )
 
     argsa = parser.parse_args()
-    
-    if (argsa.file==None):
+
+    if argsa.file == None:
         parser.print_help()
         exit()
 
-    if (argsa.field==None):
+    if argsa.field == None:
         parser.print_help()
         exit()
 
-    rounding=argsa.rounding
-    multFactor=argsa.multFactor
+    rounding = argsa.rounding
+    multFactor = argsa.multFactor
 
     fileName = argsa.file[0]
     fieldName = argsa.field[0]
 
-    res=bb_read_json_field(fileName, fieldName, rounding, multFactor)
-    
+    res = bb_read_json_field(fileName, fieldName, rounding, multFactor)
+
     print(str(res))
+
 
 if __name__ == "__main__":
     main()
-
-

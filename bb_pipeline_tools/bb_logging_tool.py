@@ -1,112 +1,135 @@
 #!/bin/env python
-#
-# Script name: bb_logging_tool.py
-#
-# Description: Set of functions to do proper logging for python scripts.
-#
-# Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
-#
-# Copyright 2017 University of Oxford
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+"""
+Script name: bb_logging_tool.py
+
+Description:
+
+    A set of functions to do proper logging for python scripts.
+
+    Logs are designed to reflect the linear design of the pipeline. The logger naming hierarchy is designed to reflect
+    this is the logs themselves and the python logger objects. Logger names are determined by the current scripts base
+    name. For example, at the highest level, the pipeline is defined and run from bb_pipeline_tools/bb_pipeline.py,
+    where sub-pipelines are called. This results in a log file that looks like this:
+
+        #todo: include example
+
+    the naming in the log records reflects the pipeline call stack with bb_pipeline at the highest level of the main
+    pipeline and all sub-pipelines and processes following in a similar manner. Retrieving the logger object in the
+    sub-pipeline or sub-process files using the get_logger() ensures the integrity of this structure.
+
+Authors:
+
+        Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
+
+Contributors:
+
+        Patrick Mahon (pmahon@sfu.ca)
+
+License:
+
+    Copyright 2017 University of Oxford
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
 
 import os
-import time
 import logging
+import inspect
 from subprocess import run
 import shlex
+import textwrap
 
 
-def initLogging(fileName, subject, batching=False):
+def init_logging(subject):
+    """
+    Initializes the logging system for the given python file and subject.
 
-    scriptName = os.path.basename(fileName)
-    scriptNameIndex = scriptName.rfind(".")
-    if scriptNameIndex != -1:
-        scriptName = scriptName[0:scriptNameIndex]
+    Args:
+        subject: The name of the subject file being run.
 
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(scriptName)
-    logger.propagate = False
-    if batching:
-        logDir = os.path.abspath(
-            os.path.join(os.getcwd() + "/../" + subject + "/logs/")
-        )
-    else:
-        logDir = os.getcwd() + "/" + subject + "/logs/"
-    # logDir = "../../logs/"
-    if not os.path.isdir(logDir):
-        os.mkdir(logDir)
+    Returns:
+        A python logger object.
+    """
+    log_file = f"logs/{subject}.log"
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
-    subj = subject.split("/")[-1]
-    logFileName = (
-        logDir + "/" + scriptName + "__" + subject + "__" + str(os.getpid()) + ".log"
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.INFO,
+        format="%(asctime)s - %(module)s - %(filename)s - %(levelname)s - %(message)s",
     )
-    # logFileName = (
-    #    logDir + "/" + scriptName + "__" + subj + "__" + str(os.getpid()) + ".log"
-    # )
-    logFile = logging.FileHandler(logFileName)
-    logFile.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s ")
-    )
-    logger.addHandler(logFile)
-    logger.info("Starting the subject processing: " + str(time.ctime(int(time.time()))))
-    logger.info("Subject received as input: " + subject)
 
-    logger.logDir = logDir
+    logger = logging.getLogger()
+    logger.log_dir = os.path.dirname(log_file)
+
+    logging.info("Logging directory created at: " + os.getcwd() + "/" + log_file)
 
     return logger
 
 
-def finishLogging(logger):
+def run_command(logger, command, job_name):
+    """
+    Performs the specified command and logs the resulting output.
 
-    logger.info(
-        "Main processing file finished at: " + str(time.ctime(int(time.time())))
-    )
+    Args:
+        logger:     The python logging object.
+        command:    The command to be run.
+        job_name:   The name of the current job.
 
+    Returns:    None: Writes to corresponding log files specified by the logger object.
+    """
 
-def runCommand(logger, command, jobname):
+    # Standard out/error printing indentation level
+    indent_level = 4
 
     try:
-        logger.info("COMMAND TO RUN: \t" + command.strip())
-        # resolve evironment var filepaths and parse
+        # resolve environment var filepaths and parse
         command_list = shlex.split(os.path.expandvars(command))
-        jobOUTPUT = run(command_list, capture_output=True, text=True)
-        #jobOUTPUT=popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
-        logfile = f"{jobname}.log"
-        logfile = os.path.join(logger.logDir, logfile)
-        f = open(logfile ,"a+")
-        f.write("STANDARD OUT:\n")
-        f.write(jobOUTPUT.stdout)
-        f.write("\n\nSTANDARD ERROR:\n")
-        f.write(jobOUTPUT.stderr)
-        f.close()
-        # logfile = f"{jobname}.e"
-        # logfile = os.path.join(logger.logDir, logfile)
-        # f = open(logfile ,"a+")
-        # f.write(jobOUTPUT.stderr)
-        # f.close()
 
-        # TODO: remove decode since there's no need to do so
-        # jobOUTPUT=jobOUTPUT.decode("UTF-8")
-        logger.info("COMMAND OUTPUT: \t" + jobOUTPUT.stderr)
+        logger.info("RUNNING:\n\t" + command.strip())
+
+        # create logging directory for the calling module if it doesn't exist.
+        calling_module = "/" + inspect.getmodule(inspect.stack()[1][0]).__name__ + "/"
+
+        if not os.path.isdir(logger.log_dir + calling_module):
+            os.mkdir(logger.log_dir + calling_module)
+
+        # perform the designated commands and capture output
+        std_out_file = (
+            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".o"
+        )
+        std_error_file = (
+            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".e"
+        )
+
+        os.makedirs(os.path.dirname(std_out_file), exist_ok=True)
+        os.makedirs(os.path.dirname(std_error_file), exist_ok=True)
+
+        std_out = open(std_out_file, "w+")
+        std_error = open(std_error_file, "w+")
+
+        run(command_list, text=True, stdout=std_out, stderr=std_error)
+
+        std_out.close()
+        std_error.close()
+
+        logger.info("STANDARD OUT: " + std_out_file)
+        logger.info("STANDARD ERROR: " + std_error_file)
+
+        logger.info("COMPLETE: " + command.strip())
 
     except Exception as e:
-        logger.error("Exception raised during execution of: \t" + command.strip())
-        logger.error("Exception type: \t" + str(type(e)))
-        logger.error("Exception args: \t" + str(e.args))
-        logger.error("Exception message: \t" + str(e))
-
-        jobOUTPUT = ""
-    # placeholder for now until i strip out all the returns
-    return ""
+        logger.error("Exception raised during execution of: \n\t" + command.strip())
+        logger.error("Exception type: \n\t" + str(type(e)))
+        logger.error("Exception args: \n\t" + str(e.args))
+        logger.error("Exception message: \n\t" + str(e))

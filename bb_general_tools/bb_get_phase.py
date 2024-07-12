@@ -4,7 +4,7 @@
 #
 # Description: Script to get the phase of a subject, based on the acq date.
 #
-# Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson	
+# Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
 #
 # Copyright 2017 University of Oxford
 #
@@ -23,63 +23,61 @@
 
 import glob
 import json
-import sys,argparse,os.path
+import sys, argparse, os.path
 from bb_read_json_field import bb_read_json_field
 
 
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
 
-def main(): 
-    
-    parser = MyParser(description='BioBank Phase Reader')
-    parser.add_argument("subjectFolder", help='Subject Folder')
+def main():
+    parser = MyParser(description="BioBank Phase Reader")
+    parser.add_argument("subjectFolder", help="Subject Folder")
 
     argsa = parser.parse_args()
 
     subject = argsa.subjectFolder
     subject = subject.strip()
 
-    fileDir=subject + "/T1"
+    fileDir = subject + "/T1"
 
-    fileName=fileDir + "/T1.json"
+    fileName = fileDir + "/T1.json"
 
     if not os.path.isfile(fileName):
-
-        foundFile=glob.glob(fileDir + "/*/T1.json")
-        if foundFile == [] :
-            print('-1')            
+        foundFile = glob.glob(fileDir + "/*/T1.json")
+        if foundFile == []:
+            print("-1")
             exit(1)
         else:
-            fileName=foundFile[0]
+            fileName = foundFile[0]
 
-    res=bb_read_json_field(fileName, "AcquisitionDateTime")
+    res = bb_read_json_field(fileName, "AcquisitionDateTime")
 
-    if res==[]:
-        print('-1')
+    if res == []:
+        print("-1")
         exit(1)
     else:
-        res=float(res)
+        res = float(res)
 
-    with open(os.environ['BB_BIN_DIR']+'/bb_data/phases_dates.json') as data_file:
-        phases_dates=json.load(data_file)
+    with open(os.environ["BB_BIN_DIR"] + "/bb_data/phases_dates.json") as data_file:
+        phases_dates = json.load(data_file)
 
     for key in phases_dates.keys():
-        if (phases_dates[key][0]<=res) and (res <=phases_dates[key][1]):
+        if (phases_dates[key][0] <= res) and (res <= phases_dates[key][1]):
             print(key)
             exit(0)
 
-    print('-1')
+    print("-1")
+
 
 if __name__ == "__main__":
     main()
-
-

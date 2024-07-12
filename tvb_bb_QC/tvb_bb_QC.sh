@@ -191,11 +191,13 @@ rm -f $dirSubject"/QC/html/image_gen_links.js"
 
 
 
+
 		#$BB_BIN_DIR/tvb_bb_QC/image_gen_link.sh $dirSubject "uw_under" "../../dMRI/dMRI/data_B0.nii.gz" "NA22" "NA22_link" "NA23" "NA23_link" 0
 
 
 	#dMRI extraction masked
 		$BB_BIN_DIR/tvb_bb_QC/lightbox.sh -o /dMRI/dMRI/nodif_brain_mask.nii.gz -b 62.718401747457314 -c 96.08735171986915 /dMRI/dMRI/data_B0.nii.gz $dirSubject dMRI_extraction_masked
+
 
 
 

@@ -21,36 +21,56 @@
 # limitations under the License.
 #
 
-import sys,argparse,os.path
+import sys, argparse, os.path
 import nibabel as nib
 import numpy as np
 import os
 
+
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-def main(): 
 
-    parser = MyParser(description='Creates a mask with the number of voxels across the 4D image that have either (0 or negative values) or (NaN)')
-    parser.add_argument('-i', dest="input",  type=str, nargs=1, help='Input image file')
-    parser.add_argument('-o', dest="output", type=str, nargs=1, help='Output image file')
-    parser.add_argument('-n', dest="checkNaNs", type=bool, default=False ,nargs=1, help='Check NaNs instead of 0 or negative')
-    parser.add_argument('-z', dest="checkZeros", type=bool, default=False ,nargs=1, help='Check Zeros instead of 0 or negative')
+def main():
+    parser = MyParser(
+        description="Creates a mask with the number of voxels across the 4D image that have either (0 or negative values) or (NaN)"
+    )
+    parser.add_argument("-i", dest="input", type=str, nargs=1, help="Input image file")
+    parser.add_argument(
+        "-o", dest="output", type=str, nargs=1, help="Output image file"
+    )
+    parser.add_argument(
+        "-n",
+        dest="checkNaNs",
+        type=bool,
+        default=False,
+        nargs=1,
+        help="Check NaNs instead of 0 or negative",
+    )
+    parser.add_argument(
+        "-z",
+        dest="checkZeros",
+        type=bool,
+        default=False,
+        nargs=1,
+        help="Check Zeros instead of 0 or negative",
+    )
 
     argsa = parser.parse_args()
 
-    if (argsa.input==None):
+    if argsa.input == None:
         parser.print_help()
         exit()
 
-    if (argsa.output==None):
+    if argsa.output == None:
         parser.print_help()
         exit()
 
@@ -59,40 +79,38 @@ def main():
     img1 = nib.load(argsa.input[0])
 
     data = img1.get_data()
-    dims=data.shape
+    dims = data.shape
 
-    numDims=len(dims)
+    numDims = len(dims)
 
-#    if dims.length ==3:
-        
-    if numDims==4:
-        numVolumes=dims[3]
+    #    if dims.length ==3:
+
+    if numDims == 4:
+        numVolumes = dims[3]
     else:
-        numVolumes=1
+        numVolumes = 1
 
     finalIm = np.zeros(dims[0:3])
 
-    for i in range(0,numVolumes):
-
-        if numVolumes==1:
-            im=data
+    for i in range(0, numVolumes):
+        if numVolumes == 1:
+            im = data
         else:
-            im = data[:,:,:,i]
+            im = data[:, :, :, i]
 
         if argsa.checkZeros:
-            x,y,z= np.where(im==0)
+            x, y, z = np.where(im == 0)
         elif argsa.checkNaNs:
-            x,y,z= np.where(np.isnan(im))
+            x, y, z = np.where(np.isnan(im))
         else:
-            x,y,z= np.where(im<=0)
-        for j in range (0, x.size):
-            finalIm[x[j],y[j],z[j]]=finalIm[x[j],y[j],z[j]]+1
-    
-    out=nib.Nifti1Image(finalIm,affine=img1.get_affine(),header=img1.get_header())
-    
+            x, y, z = np.where(im <= 0)
+        for j in range(0, x.size):
+            finalIm[x[j], y[j], z[j]] = finalIm[x[j], y[j], z[j]] + 1
+
+    out = nib.Nifti1Image(finalIm, affine=img1.get_affine(), header=img1.get_header())
+
     nib.save(out, argsa.output[0])
-             
+
+
 if __name__ == "__main__":
     main()
-
-

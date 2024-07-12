@@ -21,31 +21,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 import os.path
 import sys
 import json
+import bb_pipeline_tools.bb_logging_tool as lt
 
 sys.path.insert(1, os.path.dirname(__file__) + "/..")
-import bb_pipeline_tools.bb_logging_tool as LT
 
 
-def bb_pipeline_func(subject, fileConfiguration):
+def bb_pipeline_func(subject, file_configuration):
+    logger = logging.getLogger()
+    log_dir = logger.log_dir
+    base_dir = log_dir[0 : log_dir.rfind("/logs/")]
 
-    logger = LT.initLogging(__file__, subject)
-    logDir = logger.logDir
-    baseDir = logDir[0 : logDir.rfind("/logs/")]
+    jobs_to_wait_for = ""
 
-    jobsToWaitFor = ""
-
-    subname = subject.replace("/", "_")
+    subject_name = subject.replace("/", "_")
 
     # st = (
     #     # '${FSLDIR}/bin/fsl_sub -T 5 -N "bb_postprocess_struct_'
     #     '${FSLDIR}/bin/fsl_sub -q ${QUEUE_STANDARD} -N "bb_postprocess_struct_'
-    #     + subname
+    #     + subject_name
     #     + '" -l '
-    #     + logDir
+    #     + log_dir
     #     + " -j "
     #     + str(jobHold)
     #     + "$BB_BIN_DIR/bb_functional_pipeline/bb_postprocess_struct "
@@ -54,158 +53,141 @@ def bb_pipeline_func(subject, fileConfiguration):
 
     # print(st)
 
-    print("Beginning functional pipeline")
+    logger.info("Beginning functional pipeline")
 
-    print("Running bb_postprocess_struct...")
-    jobPOSTPROCESS = LT.runCommand(
+    logger.info("Running bb_postprocess_struct...")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_functional_pipeline/bb_postprocess_struct "
-        + subject,
-        "bb_postprocess_struct_"
-        + subname
+        "$BB_BIN_DIR/bb_functional_pipeline/bb_postprocess_struct " + subject,
+        "bb_postprocess_struct_" + subject_name,
     )
-    print("bb_postprocess_struct completed")
+    logger.info("bb_postprocess_struct completed")
 
+    if ("rfMRI" in file_configuration) and (file_configuration["rfMRI"] != ""):
+        logger.info("rfMRI files found. Running rfMRI subpipe")
 
-    # TODO: Embed the checking of the fieldmap inside the independent steps -- Every step should check if the previous one has ended.
-    if ("rfMRI" in fileConfiguration) and (fileConfiguration["rfMRI"] != ""):
-        print("rfMRI files found. Running rfMRI subpipe")
-
-        print("Running rfMRI prep...")
-        jobPREPARE_R = LT.runCommand(
+        logger.info("Running rfMRI prep...")
+        lt.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/bb_prepare_rfMRI "
-            + subject,
-            "bb_prepare_rfMRI_"
-            + subname
+            "$BB_BIN_DIR/bb_functional_pipeline/bb_prepare_rfMRI " + subject,
+            "bb_prepare_rfMRI_" + subject_name,
         )
-        print("rfMRI prep completed.")
+        logger.info("rfMRI prep completed.")
 
-        print("Running FEAT...")
-        jobFEAT_R = LT.runCommand(
+        logger.info("Running FEAT...")
+        lt.run_command(
             logger,
-            "feat "
-            + baseDir
-            + "/fMRI/rfMRI.fsf "
-            + subject,
-            "bb_feat_rfMRI_ns_"
-            + subname
+            "feat " + base_dir + "/fMRI/rfMRI.fsf " + subject,
+            "bb_feat_rfMRI_ns_" + subject_name,
         )
-        print("FEAT completed.")
+        logger.info("FEAT completed.")
 
-        print("Running FIX...")
-        jobFIX = LT.runCommand(
+        logger.info("Running FIX...")
+        lt.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/bb_fix "
-            + subject,
-            "bb_fix_"
-            + subname
+            "$BB_BIN_DIR/bb_functional_pipeline/bb_fix " + subject,
+            "bb_fix_" + subject_name,
         )
-        print("FIX completed.")
+        logger.info("FIX completed.")
 
-        print("Running FC...")
-        ### compute FC using parcellation
-        jobFC = LT.runCommand(
+        logger.info("Running FC...")
+
+        # Functional connectivity
+        logger.info("Running functional connectivity...")
+        lt.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/tvb_FC "
-            + subject,
-            "tvb_FC_"
-            + subname
+            "$BB_BIN_DIR/bb_functional_pipeline/tvb_FC " + subject,
+            "tvb_FC_" + subject_name,
         )
-        print("FC completed.")
-        ### don't generate group-ICA RSNs
-        # jobDR = LT.runCommand(
+        logger.info("FC completed.")
+
+        # don't generate group-ICA RSNs
+        # jobDR = lt.runCommand(
         # logger,
-        ##'${FSLDIR}/bin/fsl_sub -T 120  -N "bb_ICA_dr_'
-        #'${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM}  -N "bb_ICA_dr_'
-        # + subname
+        # '${FSLDIR}/bin/fsl_sub -T 120  -N "bb_ICA_dr_'
+        # '${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM}  -N "bb_ICA_dr_'
+        # + subject_name
         # + '"  -l '
-        # + logDir
+        # + log_dir
         # + " -j "
         # + jobFIX
         # + "$BB_BIN_DIR/bb_functional_pipeline/bb_ICA_dual_regression "
         # + subject,
         # )
-        print("Cleaning up rfMRI files...")
-        jobCLEAN = LT.runCommand(
+        logger.info("Cleaning up rfMRI files...")
+        job_clean = lt.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/bb_clean_fix_logs "
-            + subject,
-            "bb_rfMRI_clean_"
-            + subname
+            "$BB_BIN_DIR/bb_functional_pipeline/bb_clean_fix_logs " + subject,
+            "bb_rfMRI_clean_" + subject_name,
         )
-        print("Done.")
+        logger.info("Done.")
 
+        logger.info("rfMRI subpipe complete.")
 
-        print("rfMRI subpipe complete.")
-
-        jobsToWaitFor = jobCLEAN
+        jobs_to_wait_for = job_clean
 
     else:
         logger.error(
             "There is no rFMRI info. Thus, the Resting State part will not be run"
         )
 
-    if ("tfMRI" in fileConfiguration) and (fileConfiguration["tfMRI"] != ""):
-        print("tfMRI files found. Running tfMRI subpipe")
+    if ("tfMRI" in file_configuration) and (file_configuration["tfMRI"] != ""):
+        logger.info("tfMRI files found. Running tfMRI subpipeline")
 
-        print("Running tfMRI prep...")
-        jobPREPARE_T = LT.runCommand(
+        logger.info("Running tfMRI prep...")
+        lt.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/bb_prepare_tfMRI "
-            + subject,
-            "bb_prepare_tfMRI_"
-            + subname
+            "$BB_BIN_DIR/bb_functional_pipeline/bb_prepare_tfMRI " + subject,
+            "bb_prepare_tfMRI_" + subject_name,
         )
-        print("tfMRI prep complete.")
+        logger.info("tfMRI prep complete.")
 
-        print("Running FEAT...")
-        jobFEAT_T = LT.runCommand(
+        logger.info("Running FEAT...")
+        job_feat_t = lt.run_command(
             logger,
-            "feat  "
-            + baseDir
-            + "/fMRI/tfMRI.fsf",
-            "bb_feat_tfMRI_"
-            + subname
+            "feat  " + base_dir + "/fMRI/tfMRI.fsf",
+            "bb_feat_tfMRI_" + subject_name,
         )
-        print("FEAT completed.")
+        logger.info("FEAT completed.")
 
-        if jobsToWaitFor != "":
-            jobsToWaitFor = jobsToWaitFor + "," + jobFEAT_T
+        if jobs_to_wait_for != "":
+            jobs_to_wait_for = jobs_to_wait_for + "," + job_feat_t
         else:
-            jobsToWaitFor = "" + jobFEAT_T
+            jobs_to_wait_for = "" + job_feat_t
 
-        print("tfMRI subpipe complete.")
+        logger.info("tfMRI subpipe complete.")
 
     else:
         logger.error(
             "There is no tFMRI info. Thus, the Task Functional part will not be run"
         )
 
-    if jobsToWaitFor == "":
-        jobsToWaitFor = "-1"
+    if jobs_to_wait_for == "":
+        jobs_to_wait_for = "-1"
 
-    print("Functional pipeline complete.")
+    logger.info("Functional pipeline complete.")
 
-    return jobsToWaitFor
+    return jobs_to_wait_for
 
 
 if __name__ == "__main__":
     # grab subject name from command
-    subject = sys.argv[1]
+    subject_ = sys.argv[1]
     fd_fileName = "logs/file_descriptor.json"
 
     # check if subject directory exists
-    if not os.path.isdir(subject):
-        print(f"{subject} is not a valid directory. Exiting")
+    json_path_name = f"./{subject_}/{fd_fileName}"
+    if not os.path.isdir(subject_):
+        print(f"{subject_} is not a valid directory. Exiting")
         sys.exit(1)
     # attempt to open the JSON file
     try:
-        json_path = os.path.abspath(f"./{subject}/{fd_fileName}")
-        with open(json_path, "r") as f:
+        json_path = os.path.abspath(json_path_name)
+        with open(json_path_name, "r") as f:
             fileConfig = json.load(f)
-    except:
-        print(f"{json_path} could not be loaded. Exiting")
+    except Exception:
+        print(f"{json_path_name} could not be loaded. Exiting")
         sys.exit(1)
+
     # call pipeline
-    bb_pipeline_func(subject, fileConfig)
+    bb_pipeline_func(subject_, fileConfig)

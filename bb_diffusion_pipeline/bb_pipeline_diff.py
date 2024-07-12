@@ -21,204 +21,193 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 import os.path
 import sys
 import json
+import bb_pipeline_tools.bb_logging_tool as lt
 
 sys.path.insert(1, os.path.dirname(__file__) + "/..")
-import bb_pipeline_tools.bb_logging_tool as LT
 
 
-def bb_pipeline_diff(subject, fileConfiguration):
+def bb_pipeline_diff(subject):
+    logger = logging.getLogger()
 
-    logger = LT.initLogging(__file__, subject)
-    logDir = logger.logDir
-    baseDir = logDir[0 : logDir.rfind("/logs/")]
+    log_dir = logger.log_dir
+    base_dir = log_dir[0 : log_dir.rfind("/logs/")]
 
-    subname = subject.replace("/", "_")
+    subject_name = subject.replace("/", "_")
 
-    print("Beginning diffusion pipeline")
+    logger.info("Beginning diffusion pipeline")
 
-    print("Running pre_eddy...")
-    jobPREPARE = LT.runCommand(
+    logger.info("Running pre_eddy...")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_pre_eddy "
-        + subject,
-        "bb_pre_eddy_"
-        + subname
+        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_pre_eddy " + subject,
+        "bb_pre_eddy_" + subject_name,
     )
-    print("pre_eddy completed.")
+    logger.info("pre_eddy completed.")
 
     if os.environ["SynB0"] == "y":
-        print("Running SynB0 unwarping...")
-        LT.runCommand(
+        logger.info("Running SynB0 unwarping...")
+        lt.run_command(
             logger,
             "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_SynB0/tvb_SynB0_pipeline.sh "
             + subject,
-            "tvb_bb_SynB0_pipeline_"
-            + subname
+            "tvb_bb_SynB0_pipeline_" + subject_name,
         )
-        print("SynB0 unwarping done.")
+        logger.info("SynB0 unwarping done.")
 
-    print("Running eddy..")
-    jobEDDY = LT.runCommand(
+    logger.info("Running eddy..")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_eddy_wrap "
-        + baseDir,
-        "bb_eddy_"
-        + subname
+        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_eddy_wrap " + base_dir,
+        "bb_eddy_" + subject_name,
     )
-    print("eddy completed.")
+    logger.info("eddy completed.")
 
-    print("Running post_eddy...")
-    jobPOSTEDDY = LT.runCommand(
+    logger.info("Running post_eddy...")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_post_eddy "
-        + baseDir,
-        "bb_post_eddy_"
-        + subname
+        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_eddy/bb_post_eddy " + base_dir,
+        "bb_post_eddy_" + subject_name,
     )
 
-    print("post_eddy completed.")
+    logger.info("post_eddy completed.")
 
-    print("Running DTIFIT...")
-    jobDTIFIT = LT.runCommand(
+    logger.info("Running DTIFIT...")
+    lt.run_command(
         logger,
         "${FSLDIR}/bin/dtifit -k "
-        + baseDir
+        + base_dir
         + "/dMRI/dMRI/data_1_shell -m "
-        + baseDir
+        + base_dir
         + "/dMRI/dMRI/nodif_brain_mask -r "
-        + baseDir
+        + base_dir
         + "/dMRI/dMRI/data_1_shell.bvec -b "
-        + baseDir
+        + base_dir
         + "/dMRI/dMRI/data_1_shell.bval -o "
-        + baseDir
+        + base_dir
         + "/dMRI/dMRI/dti",
-        "bb_dtifit_"
-        + subname
+        "bb_dtifit_" + subject_name,
     )
-    print("DTIFIT completed.")
+    logger.info("DTIFIT completed.")
 
-    print("Running TBSS...")
-    jobTBSS = LT.runCommand(
+    logger.info("Running TBSS...")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_tbss/bb_tbss_general "
-        + subject,
-        "bb_tbss_"
-        + subname
+        "$BB_BIN_DIR/bb_diffusion_pipeline/bb_tbss/bb_tbss_general " + subject,
+        "bb_tbss_" + subject_name,
     )
-    print("TBSS completed.")
-    # jobNODDI = LT.runCommand(
+    logger.info("TBSS completed.")
+    # jobNODDI = lt.runCommand(
     # logger,
-    ##'${FSLDIR}/bin/fsl_sub -T 100 -N "bb_NODDI_'
-    #'${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM} -N "bb_NODDI_'
-    # + subname
+    # '${FSLDIR}/bin/fsl_sub -T 100 -N "bb_NODDI_'
+    # '${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM} -N "bb_NODDI_'
+    # + subject_name
     # + '" -j '
     # + jobTBSS
     # + "  -l "
-    # + logDir
+    # + log_dir
     # + "$BB_BIN_DIR/bb_diffusion_pipeline/bb_NODDI "
     # + subject,
     # )
 
-    print("Running pre_bedpostx...")
-    jobPREBEDPOSTX = LT.runCommand(
+    logger.info("Running pre_bedpostx...")
+    lt.run_command(
         logger,
         "$BB_BIN_DIR/bb_diffusion_pipeline/bb_bedpostx/bb_pre_bedpostx_gpu "
-        + baseDir
+        + base_dir
         + "/dMRI",
-        "bb_pre_bedpostx_gpu_"
-        + subname
+        "bb_pre_bedpostx_gpu_" + subject_name,
     )
-    print("pre_bedpostx completed.")
+    logger.info("pre_bedpostx completed.")
 
-    print("Running bedpostx...")
-    jobBEDPOSTX = LT.runCommand(
+    logger.info("Running bedpostx...")
+    lt.run_command(
         logger,
         "$BB_BIN_DIR/bb_diffusion_pipeline/bb_bedpostx/bb_bedpostx_gpu "
-        + baseDir
+        + base_dir
         + "/dMRI",
-        "bb_bedpostx_gpu_"
-        + subname
+        "bb_bedpostx_gpu_" + subject_name,
     )
-    print("bedpostx completed.")
-    ##### bb_post_bedpostx_gpu not necessary if using bedpostx package rather than xfibres (gpu) #####
-    # jobPOSTBEDPOSTX = LT.runCommand(
+    logger.info("bedpostx completed.")
+
+    # bb_post_bedpostx_gpu not necessary if using bedpostx package rather than xfibres (gpu) #####
+    # lt.runCommand(
     # logger,
-    ##'${FSLDIR}/bin/fsl_sub -T 15  -N "bb_post_bedpostx_gpu_'
-    #'${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM}  -N "bb_post_bedpostx_gpu_'
-    # + subname
+    # '${FSLDIR}/bin/fsl_sub -T 15  -N "bb_post_bedpostx_gpu_'
+    # '${FSLDIR}/bin/fsl_sub -q ${QUEUE_MORE_MEM}  -N "bb_post_bedpostx_gpu_'
+    # + subject_name
     # + '" -j '
     # + jobBEDPOSTX
     # + "  -l "
-    # + logDir
+    # + log_dir
     # + "$BB_BIN_DIR/bb_diffusion_pipeline/bb_bedpostx/bb_post_bedpostx_gpu "
-    # + baseDir
+    # + base_dir
     # + "/dMRI/dMRI",
     # )
-    #### running our own tractography algorithms so turning AutoPtx option off
-    # jobAUTOPTX = LT.runCommand(
+
+    #  running our own tractography algorithms so turning AutoPtx option off
+    # lt.runCommand(
     # logger,
     # "$BB_BIN_DIR/bb_diffusion_pipeline/bb_autoPtx/bb_autoPtx "
-    # + subname
+    # + subject_name
     # + " "
     # + jobPOSTBEDPOSTX
     # + ","
     # + jobTBSS,
     # )
 
-    print("Running tvb_probtrackx...")
-    jobPREPROBTRACKX = LT.runCommand(
+    logger.info("Running tvb_probtrackx...")
+    lt.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_probtrackx2 "
-        + baseDir,
-        "tvb_probtrackx_"
-        + subname
+        "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_probtrackx2 " + base_dir,
+        "tvb_probtrackx_" + subject_name,
     )
-    print("tvb_probtrackx completed.")
+    logger.info("tvb_probtrackx completed.")
 
     # commenting out CPU version of probtrackx for now
-    # jobPROBTRACKX = LT.runCommand(
+    # jobPROBTRACKX = lt.runCommand(
     #     logger,
-    #     baseDir
-    #     + "/dMRI/probtrackx/probtrackx_commands_$SGE_TASK_ID.txt'",
+    #     base_dir
+    #     + "/dMRI/probtrackx/probtrackx_commands_$SGE_TASK_ID.txt",
     #     "bb_probtrackx_"
-    #     + subname
+    #     + subject_name
     # )
     # jobPROBTRACKX = jobPROBTRACKX.split(".")[0]
 
-    print("Running tvb_post_probtrackx...")
-    jobPOSTPROBTRACKX = LT.runCommand(
+    logger.info("Running tvb_post_probtrackx...")
+    job_post_probtrackx = lt.run_command(
         logger,
         "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_post_probtrackx2 "
         + subject,
-        "tvb_post_probtrackx_"
-        + subname
+        "tvb_post_probtrackx_" + subject_name,
     )
-    print("post_probrackx completed.")
+    logger.info("post_probrackx completed.")
 
-    print("Diffusion pipeline complete.")
-    return jobPOSTPROBTRACKX
+    logger.info("Diffusion pipeline complete.")
+    return job_post_probtrackx
 
 
 if __name__ == "__main__":
     # grab subject name from command
-    subject = sys.argv[1]
+    subject_ = sys.argv[1]
     fd_fileName = "logs/file_descriptor.json"
 
     # check if subject directory exists
-    if not os.path.isdir(subject):
-        print(f"{subject} is not a valid directory. Exiting")
+    json_path_name = f"./{subject_}/{fd_fileName}"
+    if not os.path.isdir(subject_):
+        print(f"{subject_} is not a valid directory. Exiting")
         sys.exit(1)
     # attempt to open the JSON file
     try:
-        json_path = os.path.abspath(f"./{subject}/{fd_fileName}")
-        with open(json_path, "r") as f:
+        json_path = os.path.abspath(json_path_name)
+        with open(json_path_name, "r") as f:
             fileConfig = json.load(f)
-    except:
-        print(f"{json_path} could not be loaded. Exiting")
+    except Exception:
+        print(f"{json_path_name} could not be loaded. Exiting")
         sys.exit(1)
+
     # call pipeline
-    bb_pipeline_diff(subject, fileConfig)
+    bb_pipeline_diff(subject_)

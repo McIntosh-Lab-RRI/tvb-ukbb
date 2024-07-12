@@ -19,11 +19,12 @@ font = {"size": 100}
 matplotlib.rc("font", **font)
 
 
-def SC_FC(subj,subjName, PARC_NAME):
+
+def SC_FC(subj, subjName, PARC_NAME):
     """Function that generates SC, FC, TL, TS plots for QC html report
     for a subject.
 
-    TODO: more error handling here and in function def to deal with 
+    TODO: more error handling here and in function def to deal with
             invalid files and paths
 
     Parameters
@@ -32,36 +33,32 @@ def SC_FC(subj,subjName, PARC_NAME):
         Full path to subject's directory.
 
 
-    subjName : 
+    subjName :
         Subject name.
     """
 
-
-
-    #remove trailing forward slashes in subject paths
+    # remove trailing forward slashes in subject paths
     if subj.endswith("/"):
         subj = subj[:-1]
 
     if not os.path.exists(subj + "/QC/SC_FC/"):
         os.makedirs(subj + "/QC/SC_FC/")
 
-
-
-
-
-
-
     f, ax1, ax2, ax3, ax4, ax5, ax6 = "", "", "", "", "", "", ""
 
-    #import data and generate graphs for fMRI
-    #for each ica folder in fMRI
+    # import data and generate graphs for fMRI
+    # for each ica folder in fMRI
     try:
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
 
-                #import FC and TS data
-                fc_path = os.path.join(subj + "/fMRI/", file, "fc_"+PARC_NAME+".txt")
-                ts_path = os.path.join(subj + "/fMRI/", file, "ts_"+PARC_NAME+".txt")
+                # import FC and TS data
+                fc_path = os.path.join(
+                    subj + "/fMRI/", file, "fc_" + PARC_NAME + ".txt"
+                )
+                ts_path = os.path.join(
+                    subj + "/fMRI/", file, "ts_" + PARC_NAME + ".txt"
+                )
 
                 FC = ""
                 norm_ts = ""
@@ -74,15 +71,11 @@ def SC_FC(subj,subjName, PARC_NAME):
                 except:
                     print("ERROR: fc, ts file not found")
 
-
-            
-
-
-                #generate plots for FC and TS
+                # generate plots for FC and TS
                 try:
                     file_name_no_period = file.replace(".", "_")
 
-                    #set range of -0.5 and 1 for FC values
+                    # set range of -0.5 and 1 for FC values
                     FC_matrix = copy.deepcopy(FC)
                     for i in range(FC.shape[0]):
                         for j in range(FC.shape[1]):
@@ -91,15 +84,14 @@ def SC_FC(subj,subjName, PARC_NAME):
                             if FC[i][j] > 1:
                                 FC_matrix[i][j] = 1
 
-                    #save matrix for FC
+                    # save matrix for FC
                     f, ax = plt.subplots(1, 1, figsize=(50, 50))
                     ax.set_title(file_name_no_period + " FC (linear scale)")
                     ax.set_xlabel("ROI")
                     ax.set_ylabel("ROI")
                     im = ax.imshow(FC_matrix, cmap="jet")
                     cbar = f.colorbar(im, ax=ax)
-                    cbar.set_label('pearson correlation coefficient', rotation=270)
-
+                    cbar.set_label("pearson correlation coefficient", rotation=270)
 
                     plt.tight_layout()
                     saveNm = (
@@ -112,8 +104,7 @@ def SC_FC(subj,subjName, PARC_NAME):
                     )
                     f.savefig(saveNm)
 
-
-                    #save carpet plot for TS
+                    # save carpet plot for TS
                     f, ax = plt.subplots(1, 1, figsize=(50, 30))
                     ax.set_xlabel("volume")
                     ax.set_ylabel("ROI")
@@ -131,8 +122,7 @@ def SC_FC(subj,subjName, PARC_NAME):
                     )
                     f.savefig(saveNm)
 
-
-                    #save histogram for FC
+                    # save histogram for FC
                     f, ax = plt.subplots(1, 1, figsize=(50, 30))
                     ax.set_title(file_name_no_period + " FC histogram (linear scale)")
                     ax.set_xlabel("pearson correlation coefficient")
@@ -153,33 +143,27 @@ def SC_FC(subj,subjName, PARC_NAME):
     except:
         print("ERROR: no fMRI folder in subject directory")
 
-    
-
-
-    #import SC data
+    # import SC data
     SC = ""
     try:
-        SC = np.loadtxt(subj + "/dMRI/sc_"+PARC_NAME+".txt")
+
+        SC = np.loadtxt(subj + "/dMRI/sc_" + PARC_NAME + ".txt")
     except:
         print("ERROR: sc file not found")
 
-
-
-    #import TL data
+    # import TL data
     tract_lengths = ""
     try:
-        tract_lengths = np.loadtxt(subj + "/dMRI/distance_"+PARC_NAME+".txt")
+
+        tract_lengths = np.loadtxt(subj + "/dMRI/distance_" + PARC_NAME + ".txt")
     except:
         print("ERROR: distance file not found")
 
-
-
-    #generate graphs for SC
+    # generate graphs for SC
     try:
-        
         SC_log = np.log10(SC)
 
-        #set range of -6 and 0 for SC log values
+        # set range of -6 and 0 for SC log values
         SC_log_matrix = copy.deepcopy(SC_log)
         for i in range(SC_log.shape[0]):
             for j in range(SC_log.shape[1]):
@@ -188,8 +172,7 @@ def SC_FC(subj,subjName, PARC_NAME):
                 if SC_log[i][j] > 0:
                     SC_log_matrix[i][j] = 0
 
-
-        #save matrix for SC
+        # save matrix for SC
         f, ax = plt.subplots(1, 1, figsize=(50, 50))
 
         ax.set_xlabel("ROI")
@@ -198,15 +181,13 @@ def SC_FC(subj,subjName, PARC_NAME):
         ax.set_facecolor("#000000")
         im = ax.imshow(SC_log_matrix, cmap="CMRmap")
         cbar = f.colorbar(im, ax=ax)
-        cbar.set_label('probability of connection (log10)', rotation=270)
-
+        cbar.set_label("probability of connection (log10)", rotation=270)
 
         plt.tight_layout()
         saveNm = subj + "/QC/SC_FC/" + subjName + "_SC.png"
         f.savefig(saveNm)
 
-
-        #save histogram for SC
+        # save histogram for SC
         f, ax = plt.subplots(1, 1, figsize=(50, 30))
 
         ax.set_xlabel("probability of connection (log10)")
@@ -221,14 +202,11 @@ def SC_FC(subj,subjName, PARC_NAME):
     except:
         print("ERROR: Can't create SC graph")
 
-
-
-    #generate graphs for TL
+    # generate graphs for TL
     try:
-
         tract_lengths_log = np.log10(tract_lengths)
 
-        #set range of 0 and 2.5 for SC log values
+        # set range of 0 and 2.5 for SC log values
         tract_lengths_log_matrix = copy.deepcopy(tract_lengths_log)
         for i in range(tract_lengths_log.shape[0]):
             for j in range(tract_lengths_log.shape[1]):
@@ -237,8 +215,7 @@ def SC_FC(subj,subjName, PARC_NAME):
                 if tract_lengths_log[i][j] > 2.5:
                     tract_lengths_log_matrix[i][j] = 2.5
 
-
-        #save matrix for TL
+        # save matrix for TL
         f, ax = plt.subplots(1, 1, figsize=(50, 50))
 
         ax.set_xlabel("ROI")
@@ -247,15 +224,13 @@ def SC_FC(subj,subjName, PARC_NAME):
         ax.set_facecolor("#000000")
         im = ax.imshow(tract_lengths_log_matrix, cmap="CMRmap")
         cbar = f.colorbar(im, ax=ax)
-        cbar.set_label('tract length (log10 mm)', rotation=270)
-
+        cbar.set_label("tract length (log10 mm)", rotation=270)
 
         plt.tight_layout()
         saveNm = subj + "/QC/SC_FC/" + subjName + "_TL.png"
         f.savefig(saveNm)
 
-
-        #save histogram for TL
+        # save histogram for TL
         f, ax = plt.subplots(1, 1, figsize=(50, 30))
 
         ax.set_xlabel("tract length (mm)")
@@ -271,30 +246,26 @@ def SC_FC(subj,subjName, PARC_NAME):
         print("ERROR: Can't create TL graph")
 
 
-
-
 if __name__ == "__main__":
     """Function that generates SC, FC, TL, TS plots for QC html report
     for a subject.
 
-    
+
     Usage
     ----------
     python  SC_FC.py  subj
-    
+
 
     Arguments
     ----------
-    subj : 
+    subj :
         Full path to subject's directory.
 
 
-    subjName : 
+    subjName :
         Subject name.
 
     """
     # try:
-    SC_FC(sys.argv[1],sys.argv[2],sys.argv[3])
 
-
-    
+    SC_FC(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -26,43 +26,44 @@ import os
 import glob
 import time
 import logging
-import sys,argparse,os.path
+import sys, argparse, os.path
 import bb_logging_tool as LT
 from bb_file_manager import bb_file_manager
 
+
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-def main(): 
 
-    parser = MyParser(description='BioBank Pipeline FILE Manager')
-    parser.add_argument("subjectFolder", help='Subject Folder')
+def main():
+    parser = MyParser(description="BioBank Pipeline FILE Manager")
+    parser.add_argument("subjectFolder", help="Subject Folder")
 
     argsa = parser.parse_args()
 
     subject = argsa.subjectFolder
     subject = subject.strip()
 
-    if subject[-1] =='/':
-        subject = subject[0:len(subject)-1]
-    
-    logger = LT.initLogging(__file__, subject)
+    if subject[-1] == "/":
+        subject = subject[0 : len(subject) - 1]
 
-    logger.info('Running file manager') 
+    logger = LT.init_logging(__file__, subject)
+
+    logger.info("Running file manager")
     fileConfig = bb_file_manager(subject)
 
     logger.info("File configuration after running file manager: \n" + str(fileConfig))
 
-    LT.finishLogging(logger)
-             
+    LT.finish_logging(logger)
+
+
 if __name__ == "__main__":
     main()
-
-

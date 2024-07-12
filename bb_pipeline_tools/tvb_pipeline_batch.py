@@ -71,7 +71,6 @@ def queuer(args):
     start_time = time.time()
 
     while subj_counter <= len(subject_dirs):
-
         # wait 5 seconds between polling qstat
         wait_time_check = 30.0
         # 0.1 is lowest float val where it won't execute multiple times
@@ -158,14 +157,16 @@ def start_queue(args):
     print(f"Submitting first {args.num_concurrents} subjects to grid...")
     logger.info(f"Submitting first {args.num_concurrents} subjects to grid...")
     while num_submitted < args.num_concurrents:
-
         # assign PID returned from running pipeline to corresponding index
         # in pid_list
         curr_pid = bb_pipeline([subject_dirs[subj_counter]])
         curr_subj = subject_dirs[subj_counter].strip("\n")
         # print in-progress file so resume can detect messed up subjects
         try:
-            with open(f"{args.subjects_paths}/{curr_subj}/in_progress.txt", "w+",) as f:
+            with open(
+                f"{args.subjects_paths}/{curr_subj}/in_progress.txt",
+                "w+",
+            ) as f:
                 pass
         # error handling in case the file can't be written out
         except:
@@ -186,7 +187,10 @@ def start_queue(args):
             )
             # print errors.txt file so resume can detect messed up subjects
             try:
-                with open(f"{args.subjects_paths}/{curr_subj}/errors.txt", "w+",) as f:
+                with open(
+                    f"{args.subjects_paths}/{curr_subj}/errors.txt",
+                    "w+",
+                ) as f:
                     f.write(f"Subject failed to submit")
                     pass
             # error handling in case the file can't be written out
@@ -234,7 +238,7 @@ def check_handle_job_finished(
     args : object
         Object containing each argument parsed by argparse.
     pid_list : list
-        List of final process IDs for each subject, where the PID is 
+        List of final process IDs for each subject, where the PID is
         the qsub PID of the final step in the pipeline.
     subj_counter : int
         Counts how many subjects have been submitted since the
@@ -261,7 +265,6 @@ def check_handle_job_finished(
     )
 
     for i in range(len(pid_list)):
-
         # qstat() returns two lists of dictionaries: one with jobs
         # runnning, one with jobs in queue. combining them into all_jobs
         queue_info, job_info = qstat()
@@ -334,7 +337,8 @@ def check_handle_job_finished(
             # write out in_progress file for resume checking
             try:
                 with open(
-                    f"{args.subjects_paths}/{subjs_running[i]}/in_progress.txt", "w+",
+                    f"{args.subjects_paths}/{subjs_running[i]}/in_progress.txt",
+                    "w+",
                 ) as f:
                     pass
             except:
@@ -368,7 +372,7 @@ def check_handle_job_errored(args, pid_list, subj_counter, subject_dirs, subjs_r
     args : object
         Object containing each argument parsed by argparse.
     pid_list : list
-        List of final process IDs for each subject, where the PID is 
+        List of final process IDs for each subject, where the PID is
         the qsub PID of the final step in the pipeline.
     subj_counter : int
         counts how many subjects have been submitted since the
@@ -389,7 +393,6 @@ def check_handle_job_errored(args, pid_list, subj_counter, subject_dirs, subjs_r
         Updated list of running subjects.
     """
     for i in range(len(pid_list)):
-
         # qstat() returns two lists of dictionaries: one with jobs
         # runnning, one with jobs in queue. combining them into all_jobs
         queue_info, job_info = qstat()
@@ -435,7 +438,6 @@ def check_handle_job_errored(args, pid_list, subj_counter, subject_dirs, subjs_r
 
         # submitted subject errored before submission completed
         elif pid_list[i] == "-1":
-
             # don't assign to pid_list and subjs_running
             logger.warn(
                 f"{subjs_running[i]} failed to submit. "
@@ -448,7 +450,8 @@ def check_handle_job_errored(args, pid_list, subj_counter, subject_dirs, subjs_r
             # print errors.txt file so resume can detect messed up subjects
             try:
                 with open(
-                    f"{args.subjects_paths}/{subjs_running[i]}/errors.txt", "w+",
+                    f"{args.subjects_paths}/{subjs_running[i]}/errors.txt",
+                    "w+",
                 ) as f:
                     f.write(f"Subject failed to submit")
             # error handling in case the file can't be written out
@@ -572,7 +575,7 @@ def resume(args):
         list of subject names that have not been processed by
         the script.
     counter : int
-        counts how many subjects removed from the first the 
+        counts how many subjects removed from the first the
         script was before it was interrupted.
 
     """
@@ -595,7 +598,6 @@ def resume(args):
     # grab absolute path to subjects directory
     path_prefix = os.path.abspath(args.subjects_paths)
     for subj in subject_dirs:
-
         # paaths to status txt files
         subj_dir = f"{path_prefix}/{subj}/completed.txt"
         subj_progress = f"{path_prefix}/{subj}/in_progress.txt"
@@ -712,7 +714,6 @@ def parse_args():
 
 
 if __name__ == "__main__":
-
     # get parsed args
     args = parse_args()
     now = datetime.now()
@@ -729,6 +730,6 @@ if __name__ == "__main__":
     os.mkdir(f"{os.getcwd()}/../{subj_name}/logs")
 
     # start logger
-    logger = LT.initLogging(__file__, f"{subj_name}", batching=True)
+    logger = LT.init_logging(__file__, f"{subj_name}")
     # start queuer
     queuer(args)

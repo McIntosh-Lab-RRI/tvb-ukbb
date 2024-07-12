@@ -33,8 +33,8 @@ def inference(T1_path, b0_d_path, model, device):
 
     # Pad array since I stupidly used template with dimensions not factorable by 8
     # Assumes input is (77, 91, 77) and pad to (80, 96, 80) with zeros
-    img_T1 = np.pad(img_T1, ((2, 1), (3, 2), (2, 1), (0, 0)), 'constant')
-    img_b0_d = np.pad(img_b0_d, ((2, 1), (3, 2), (2, 1), (0, 0)), 'constant')
+    img_T1 = np.pad(img_T1, ((2, 1), (3, 2), (2, 1), (0, 0)), "constant")
+    img_b0_d = np.pad(img_b0_d, ((2, 1), (3, 2), (2, 1), (0, 0)), "constant")
 
     # Convert to torch img format
     img_T1 = util.nii2torch(img_T1)
@@ -65,17 +65,17 @@ def inference(T1_path, b0_d_path, model, device):
     return img_model
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Get input arguments ----------------------------------#
     T1_input_path = sys.argv[1]
     b0_input_path = sys.argv[2]
     b0_output_path = sys.argv[3]
     model_path = sys.argv[4]
 
-    print('T1 input path: ' + T1_input_path)
-    print('b0 input path: ' + b0_input_path)
-    print('b0 output path: ' + b0_output_path)
-    print('Model path: ' + model_path)
+    print("T1 input path: " + T1_input_path)
+    print("b0 input path: " + b0_input_path)
+    print("b0 output path: " + b0_output_path)
+    print("Model path: " + model_path)
 
     # Run code ---------------------------------------------#
 
@@ -91,5 +91,9 @@ if __name__ == '__main__':
 
     # Save
     nii_template = nib.load(b0_input_path)
-    nii = nib.Nifti1Image(util.torch2nii(img_model.detach().cpu()), nii_template.affine, nii_template.header)
+    nii = nib.Nifti1Image(
+        util.torch2nii(img_model.detach().cpu()),
+        nii_template.affine,
+        nii_template.header,
+    )
     nib.save(nii, b0_output_path)

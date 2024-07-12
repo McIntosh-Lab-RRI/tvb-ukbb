@@ -21,8 +21,7 @@ log = globals.get_logger()
 
 
 def argument_parse_gradunwarp():
-    """Arguments parser from the command line
-    """
+    """Arguments parser from the command line"""
     # initiate
     # p = arg.ArgumentParser(version=globals.VERSION, usage=globals.usage)
     p = arg.ArgumentParser()
@@ -104,13 +103,13 @@ def argument_parse_gradunwarp():
 
 
 class GradientUnwarpRunner(object):
-    """ Takes the option datastructure after parsing the commandline.
+    """Takes the option datastructure after parsing the commandline.
     run() method performs the actual unwarping
     write() method performs the writing of the unwarped volume
     """
 
     def __init__(self, args):
-        """ constructor takes the option datastructure which is the
+        """constructor takes the option datastructure which is the
         result of (options, args) = parser.parse_args()
         """
         self.args = args
@@ -121,8 +120,7 @@ class GradientUnwarpRunner(object):
             log.setLevel(logging.DEBUG)
 
     def run(self):
-        """ run the unwarp resample
-        """
+        """run the unwarp resample"""
         # get the spherical harmonics coefficients from parsing
         # the given .coeff file xor .grad file
         if hasattr(self.args, "gradfile") and self.args.gradfile:

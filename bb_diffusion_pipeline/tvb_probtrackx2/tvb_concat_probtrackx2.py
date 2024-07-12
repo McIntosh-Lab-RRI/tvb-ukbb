@@ -17,7 +17,7 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
 
     Parameters
     ----------
-    subj : 
+    subj :
         Full path to subject's directory.
     batch : bool, optional
         handles opening/concatenation of batched probtrackx files
@@ -32,7 +32,8 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
     # handles opening of batched outputs
     if batch:
         for m in range(1, 11):
-            batch_dir = subj + "/dMRI/probtrackx_"+PARC_NAME+"/batch_" + str(m)
+
+            batch_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + "/batch_" + str(m)
 
             if m == 1:
                 fdt = np.loadtxt(batch_dir + "/fdt_network_matrix")
@@ -42,7 +43,8 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
                 way = np.add(way, np.loadtxt(batch_dir + "/waytotal"))
 
     else:
-        standard_dir = subj + "/dMRI/probtrackx_"+PARC_NAME+""
+
+        standard_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + ""
 
         fdt = np.loadtxt(standard_dir + "/fdt_network_matrix")
         way = np.loadtxt(standard_dir + "/waytotal")
@@ -56,9 +58,10 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
     # symmetrizing matrix
     SC = (SC + SC.T) / 2
 
-    np.savetxt(subj + "/dMRI/probtrackx_"+PARC_NAME+"/fdt_network_matrix", fdt)
-    np.savetxt(subj + "/dMRI/probtrackx_"+PARC_NAME+"/waytotal", way)
-    np.savetxt(subj + "/dMRI/sc_"+PARC_NAME+".txt", SC)
+
+    np.savetxt(subj + "/dMRI/probtrackx_" + PARC_NAME + "/fdt_network_matrix", fdt)
+    np.savetxt(subj + "/dMRI/probtrackx_" + PARC_NAME + "/waytotal", way)
+    np.savetxt(subj + "/dMRI/sc_" + PARC_NAME + ".txt", SC)
 
     # calculating and saving distance, fdt_network_matrix_lengths from all 10 batches
     if batch:
@@ -68,7 +71,8 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
         mtx = ""
         mat_sum = ""
         for m in range(1, 11):
-            batch_dir = subj + "/dMRI/probtrackx_"+PARC_NAME+"/batch_" + str(m)
+
+            batch_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + "/batch_" + str(m)
 
             if m == 1:
                 mat_lengths = np.loadtxt(batch_dir + "/fdt_network_matrix_lengths")
@@ -106,19 +110,20 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
         np.savetxt(subj + "/dMRI/distance_"+PARC_NAME+".txt", tract_lengths)
 
 
+
 if __name__ == "__main__":
     """Function that generates distance, fdt_network_matrix.txt,
     SC, waytotal, fdt_network_matrix for a subject.
 
-    
+
     Usage
     ----------
     python  tvb_concat_probtrackx2.py  subj
-    
+
 
     Arguments
     ----------
-    subj : 
+    subj :
         Full path to subject's directory.
 
     """

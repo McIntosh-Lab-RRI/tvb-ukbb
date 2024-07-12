@@ -4,7 +4,7 @@
 #
 # Description: Script to read the header of a DICOM file and print it.
 #
-# Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson	
+# Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
 #
 # Copyright 2017 University of Oxford
 #
@@ -26,52 +26,54 @@ import glob
 import time
 import dicom
 import logging
-import sys,argparse,os.path
+import sys, argparse, os.path
 
 
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-def main(): 
-    
-    parser = MyParser(description='BioBank Dicom Header Reader')
-    parser.add_argument('-f', dest="file", type=str, nargs=1, help='Read dicom file')
-    parser.add_argument('--all', dest='allFields', action='store_true')
+
+def main():
+    parser = MyParser(description="BioBank Dicom Header Reader")
+    parser.add_argument("-f", dest="file", type=str, nargs=1, help="Read dicom file")
+    parser.add_argument("--all", dest="allFields", action="store_true")
 
     allFields = False
 
     argsa = parser.parse_args()
-    
-    if (argsa.file==None):
+
+    if argsa.file == None:
         parser.print_help()
         exit()
 
-    if (argsa.allFields==True):
-        allFields=True
+    if argsa.allFields == True:
+        allFields = True
 
     fileName = argsa.file[0]
 
     ds = dicom.read_file(fileName)
-    
-    if ( not allFields ):
-        excludedFilesListFileName=os.environ['BB_BIN_DIR']+"/bb_data/dicom_fields_to_exclude.txt"
-        
+
+    if not allFields:
+        excludedFilesListFileName = (
+            os.environ["BB_BIN_DIR"] + "/bb_data/dicom_fields_to_exclude.txt"
+        )
+
         with open(excludedFilesListFileName) as f:
-            hexKeys=f.readlines()
+            hexKeys = f.readlines()
         for hexKey in hexKeys:
-            keys=[int(x,0) for x in hexKey.split()]
-            ds[keys].value=''
+            keys = [int(x, 0) for x in hexKey.split()]
+            ds[keys].value = ""
 
     print(ds)
-   
+
+
 if __name__ == "__main__":
     main()
-
-

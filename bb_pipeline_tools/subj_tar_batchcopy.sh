@@ -20,9 +20,11 @@ mkdir subj_tar
 # while IFS= read -r subjname; do
 while IFS=$' \t\r\n' read -r subjname group; do
   mkdir subj_tar/${group}
+
   cd ${group}
   tar -czvf ${subjname}.tar.gz ${subjname}
   cd ..
+
   mv ${group}/${subjname}.tar.gz subj_tar/${group}/
 
 done < "$1"

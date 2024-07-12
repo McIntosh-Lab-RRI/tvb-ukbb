@@ -5,6 +5,8 @@
 # Description: Main script. This script will call the rest of scripts.
 #
 # Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
+
+# Contributors: Patrick Mahon (pmahon@sfu.ca)
 #
 # Copyright 2017 University of Oxford
 #
@@ -21,21 +23,22 @@
 # limitations under the License.
 #
 
-import re
 import os
-import glob
-import time
+import sys
+import argparse
+import os.path
 import logging
-import sys, argparse, os.path
-import bb_logging_tool as LT
+import shutil
+import bb_logging_tool as logging_tool
+
 from bb_file_manager import bb_file_manager
-from bb_basic_QC import bb_basic_QC
+from bb_basic_QC import bb_basic_qc
 from tvb_reparcellate_pipeline import tvb_reparcellate_pipeline
 from bb_structural_pipeline.bb_pipeline_struct import bb_pipeline_struct
 from bb_functional_pipeline.bb_pipeline_func import bb_pipeline_func
 from bb_diffusion_pipeline.bb_pipeline_diff import bb_pipeline_diff
-from bb_IDP.bb_IDP import bb_IDP
-from tvb_bb_QC.tvb_bb_QC import tvb_bb_QC
+from bb_IDP.bb_IDP import bb_idp
+from tvb_bb_QC.tvb_bb_QC import tvb_bb_qc
 
 
 class MyParser(argparse.ArgumentParser):
@@ -45,111 +48,122 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 
-class Usage(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-
 def main(cli_args=None):
-
-    if cli_args == None:
+    # INPUT VALIDATION
+    if cli_args is None:
         parser = MyParser(description="BioBank Pipeline Manager")
         parser.add_argument("subjectFolder", help="Subject Folder")
 
-        argsa = parser.parse_args()
+        args = parser.parse_args()
     else:
         parser = MyParser(description="BioBank Pipeline Manager")
         parser.add_argument("subjectFolder", help="Subject Folder")
-        argsa = parser.parse_args(cli_args)
+        args = parser.parse_args(cli_args)
 
-    subject = argsa.subjectFolder
+    # SUBJECT PROCESSING
+    subject = args.subjectFolder
     subject = subject.strip()
 
     if subject[-1] == "/":
         subject = subject[0 : len(subject) - 1]
 
-    logger = LT.initLogging(__file__, subject)
 
-    REPARCELLATE=os.environ['REPARCELLATE']
-    PARC_NAME=os.environ['PARC_NAME']
-    
+    # LOGGING INITIALIZATION
+    logger = logging.getLogger()
+    logger.info("Configuring logger...")
+    logger = logging_tool.init_logging(subject)
+    logger.info("Logger configured.")
 
-    if REPARCELLATE=="true":
-        tvb_reparcellate_pipeline(subject, "none", PARC_NAME)
+    # WORKFLOW HANDLING
+    reparcellate = os.environ["REPARCELLATE"]
+    parc_name = os.environ["PARC_NAME"]
 
-    if REPARCELLATE=="false":
+    if reparcellate == "true":
+        # REPARCELLATION PIPELINE
+        # reparcellation
+        logger.info("RUNNING reparcellation...")
+        tvb_reparcellate_pipeline(subject, "none", parc_name)
+        logger.info("Reparcellation COMPLETE.")
 
-        logger.info("Running file manager")
-        fileConfig = bb_file_manager(subject)
+        # clean up
+        logger.info("Main reparcellation pipeline COMPLETE.")
 
-        logger.info("File configuration before QC: " + str(fileConfig))
+    if reparcellate == "false":
+        logger.info("Cleaning directory and removing old files...")
+        # Remove old intermediate data from previous runs
+        retain = ["rawdata"]
 
-        fileConfig = bb_basic_QC(subject, fileConfig)
+        # loop through all files/folders in subject directory
+        os.chdir(subject)
+        for item in os.listdir(os.getcwd()):
+            # if file/folder not in retain list, remove
+            if item not in retain:
+                if os.path.isdir(item):
+                    shutil.rmtree(item)
+                else:
+                    os.remove(item)
 
-        logger.info("File configuration after running file manager: " + str(fileConfig))
+        logger.info("Cleaning complete.")
 
-        # runTopup ==> Having fieldmap
+        os.chdir("..")
+
+        # PIPELINE
+        # file manager
+        logger.info("RUNNING file manager...")
+        file_config = bb_file_manager(subject)
+        logger.info("bb_file_manager COMPLETE.")
+
+        logger.info("File configuration before QC:\n\t" + str(file_config))
+        file_config = bb_basic_qc(subject, file_config)
+        logger.info(
+            "File configuration after running file manager:\n\t" + str(file_config)
+        )
+
+        # run_top_up ==> Having field-map
         if not (
-            (("AP" in fileConfig) and (fileConfig["AP"] != ""))
-            and (("PA" in fileConfig) and (fileConfig["PA"] != ""))
+            (("AP" in file_config) and (file_config["AP"] != ""))
+            and (("PA" in file_config) and (file_config["PA"] != ""))
         ):
-            logger.warn("There is no proper AP/PA data. Thus, TOPUP will not be run")
-            runTopup = False
-            print("NO TOPUP")
+            logger.warning(
+                "There is no proper AP/PA data. Thus, TOP UP will not be run"
+            )
+            run_top_up = False
+            logger.warning("NO TOP UP")
         else:
-            runTopup = True
+            run_top_up = True
 
-        # set for now
-        # runTopup = True
+        # structural pipeline
+        logger.info("RUNNING structural pipeline...")
+        bb_pipeline_struct(subject, run_top_up, file_config)
+        logger.info("Structural pipeline COMPLETE.")
 
-        # Default value for job id. SGE does not wait for a job with this id.
-        jobSTEP1 = "-1"
-        jobSTEP2 = "-1"
-        jobSTEP3 = "-1"
-        jobSTEP4 = "-1"
-        jobSTEP5 = "-1"
+        # functional pipeline
+        logger.info("RUNNING Functional pipeline...")
+        bb_pipeline_func(subject, file_config)
+        logger.info("Functional pipeline COMPLETE.")
 
-        # jobSTEP1 = bb_pipeline_struct(subject, runTopup, fileConfig)
-        bb_pipeline_struct(subject, runTopup, fileConfig)
-        #handle cases: when jobstep1 would typically trigger the following
-        if isinstance(jobSTEP1, int):
-            if jobSTEP1 == -1:
-                print(
-                    "This subject could not be run. Please check the logs for more information."
-                )
-                return -1
-        if jobSTEP1[-3:] == ",-1":
-            jobSTEP1 = jobSTEP1[:-3]
+        # diffusion pipeline
+        logger.info("RUNNING diffusion pipeline...6")
+        bb_pipeline_diff(subject)
+        logger.info("Diffusion pipeline COMPLETE.")
 
-        # print(f"jobSTEP1: {jobSTEP1}")
-        # jobSTEP1 = int(jobSTEP1)
+        # image dependent phenotype
+        logger.info("RUNNING IDP...")
+        bb_idp(subject)
+        logger.info("IDP COMPLETE")
 
-        # if runTopup:
-        # jobSTEP2 = bb_pipeline_func(subject, fileConfig)
-        # jobSTEP3 = bb_pipeline_diff(subject, fileConfig)
+        # quality control
+        logger.info("RUNNING QC pipeline...")
+        tvb_bb_qc(subject)
+        logger.info("QC pipeline COMPLETE.")
 
-        # jobSTEP4 = bb_IDP(
-        #     subject, fileConfig
-        # )
+        # clean up
+        logger.info("Main pipeline COMPLETE.")
 
-        # jobSTEP5 = tvb_bb_QC(
-        #     subject,
-        #     fileConfig
-        # )
-        bb_pipeline_func(subject, fileConfig)
-        bb_pipeline_diff(subject, fileConfig)
-
-        bb_IDP(
-            subject, fileConfig
+    else:
+        logger.error(
+            'Invalid reparcellation argument\n Check environment variable "REPARCELLATE"'
         )
-
-        tvb_bb_QC(
-            subject,
-            fileConfig
-        )
-
-    LT.finishLogging(logger)
-    # return jobSTEP5
 
 
 if __name__ == "__main__":

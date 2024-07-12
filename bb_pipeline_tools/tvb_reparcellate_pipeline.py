@@ -2,9 +2,11 @@
 #
 # Script name: tvb_reparcellate_pipeline.py
 #
-# Description: This script will call all the parcellation-specific subpipes required to reparcellate a processed subject.
-# 
-# Author: Justin Wang
+
+# Description: This script will call all the parcellation-specific subpipes required to reparcellate a processed
+# subject.
+#
+# Author: Justin Wang, Patrick Mahon (pmahon@sfu.ca)
 #
 # Adapted from scripts by: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
 #
@@ -14,193 +16,179 @@ import os.path
 import sys
 import json
 
+import logging
+import bb_logging_tool as LT
+
 sys.path.insert(1, os.path.dirname(__file__) + "/..")
-import bb_pipeline_tools.bb_logging_tool as LT
+
+
 # from tvb_bb_QC.html_reparcellation import html_reparcellation
-#EXPORT PARC stuff
+# EXPORT PARC stuff
 
-def tvb_reparcellate_pipeline(subject, fileConfiguration, PARC_NAME):
 
-    #import fileconfig from json if none given
-    if fileConfiguration=="none":
+def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
+    """
+    Performs a reparcellation of the subject provided an existing run on a given parcellation has been completed.
+
+    Args:
+        subject_:   The subject name.
+        file_configuration: ?
+        PARC_NAME: The name of the parcellation type to perform. E.g:
+                        - TVBSchaeferTian420
+                        - TVBSchaeferTian220
+                        - etc...
+
+    Returns:
+
+
+    """
+
+    logger = logging.getLogger()
+    log_dir = logger.log_dir
+
+    # import fileconfig from json if none given
+    if file_configuration == "none":
+        json_relative_path = f"./{subject_}/logs/file_descriptor.json"
         try:
-            fd_fileName = "logs/file_descriptor.json"
-            json_path = os.path.abspath(f"./{subject}/{fd_fileName}")
-            with open(json_path, "r") as f:
-                fileConfiguration = json.load(f)
-        except:
-            print(f"{json_path} could not be loaded. Exiting")
+            json_absolute_path = os.path.abspath(json_relative_path)
+            with open(json_absolute_path, "r") as f:
+                file_configuration = json.load(f)
+        except Exception:
+            logger.error(f"{json_relative_path} could not be loaded. Exiting")
             sys.exit(1)
 
+    subject_ = subject_.strip()
 
+    if subject_[-1] == "/":
+        subject_ = subject_[0 : len(subject_) - 1]
 
+    base_dir = log_dir[0 : log_dir.rfind("/logs/")]
 
-
-    subject = subject.strip()
-
-    if subject[-1] == "/":
-        subject = subject[0 : len(subject) - 1]
-        
-    logger = LT.initLogging(__file__, subject)
-    logDir = logger.logDir
-    baseDir = logDir[0 : logDir.rfind("/logs/")]
-
-    subname = subject.replace("/", "_")
-
+    subject_name = subject_.replace("/", "_")
 
     ######
     # STRUCTURAL
     ######
-    print("Running structural reparcellation pipeline...")
-    jobSTRUCTPARC = LT.runCommand(
+
+    logger.info("Running structural reparcellation pipeline...")
+
+    LT.run_command(
         logger,
-        "${BB_BIN_DIR}/bb_structural_pipeline/tvb_struct_parcellation.sh "
-        + subject,
+        "${BB_BIN_DIR}/bb_structural_pipeline/tvb_struct_parcellation.sh " + subject_,
         "tvb_struct_parcellation_"
-        + subname
+        + subject_name
         + "_"
         + PARC_NAME
         + "_"
-        + "reparcellation"
+        + "reparcellation",
     )
-    print("Structural reparcellation pipeline completed.")
 
-
-
+    logger.info("Structural reparcellation pipeline completed.")
 
     ######
     # FUNCTIONAL
     ######
-    print("Beginning functional reparcellation pipeline")
 
-    if ("rfMRI" in fileConfiguration) and (fileConfiguration["rfMRI"] != ""):
-        print("rfMRI files found. Running rfMRI subpipe reparcellation")
-        print("Running FC reparcellation...")
+    logger.info("Beginning functional reparcellation pipeline")
 
-        ### compute FC using parcellation
-        jobFC = LT.runCommand(
+    if ("rfMRI" in file_configuration) and (file_configuration["rfMRI"] != ""):
+        logger.info("rfMRI files found. Running rfMRI subpipe reparcellation")
+        logger.info("Running FC reparcellation...")
+
+        # compute FC using parcellation
+        LT.run_command(
             logger,
-            "$BB_BIN_DIR/bb_functional_pipeline/tvb_FC "
-            + subject,
-            "tvb_FC_"
-            + subname
-            + "_"
-            + PARC_NAME
-            + "_"
-            + "reparcellation"
+            "$BB_BIN_DIR/bb_functional_pipeline/tvb_FC " + subject_,
+            "tvb_FC_" + subject_name + "_" + PARC_NAME + "_" + "reparcellation",
         )
-        print("FC reparcellation completed.")
-        print("rfMRI subpipe reparcellation complete.")
+
+        logger.info("FC reparcellation completed.")
+        logger.info("rfMRI sub-pipe reparcellation complete.")
     else:
         logger.error(
             "There is no rFMRI info. Thus, the Resting State part will not be run"
         )
-    print("Functional reparcellation pipeline complete.")
 
-
-
+    logger.info("Functional reparcellation pipeline complete.")
 
     ######
     # DIFFUSION
     ######
 
-    print("Beginning diffusion reparcellation pipeline")
 
-    print("Running tvb_probtrackx reparcellation...")
-    jobPREPROBTRACKX = LT.runCommand(
+    logger.info("Beginning diffusion reparcellation pipeline")
+
+    logger.info("Running tvb_probtrackx reparcellation...")
+    LT.run_command(
         logger,
-        "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_probtrackx2 "
-        + baseDir,
-        "tvb_probtrackx_"
-        + subname
-        + "_"
-        + PARC_NAME
-        + "_"
-        + "reparcellation"
+        "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_probtrackx2 " + base_dir,
+        "tvb_probtrackx_" + subject_name + "_" + PARC_NAME + "_" + "reparcellation",
     )
-    print("tvb_probtrackx reparcellation completed.")
+    logger.info("tvb_probtrackx reparcellation completed.")
 
-    print("Running tvb_post_probtrackx reparcellation...")
-    jobPOSTPROBTRACKX = LT.runCommand(
+    logger.info("Running tvb_post_probtrackx reparcellation...")
+    LT.run_command(
         logger,
         "$BB_BIN_DIR/bb_diffusion_pipeline/tvb_probtrackx2/tvb_post_probtrackx2 "
-        + subject,
+        + subject_,
         "tvb_post_probtrackx_"
-        + subname
+        + subject_name
         + "_"
         + PARC_NAME
         + "_"
-        + "reparcellation"
+        + "reparcellation",
     )
-    print("post_probrackx reparcellation completed.")
+    logger.info("post_probrackx reparcellation completed.")
 
-    print("Diffusion reparcellation pipeline complete.")
-
-
-
+    logger.info("Diffusion reparcellation pipeline complete.")
 
     ######
     # IDP
     ######
 
-    print("Running IDP reparcellation pipeline...")
-    jobIDP = LT.runCommand(
+
+    logger.info("Running IDP reparcellation pipeline...")
+    LT.run_command(
         logger,
-        "$BB_BIN_DIR/bb_IDP/bb_IDP "
-        + subject,
-        "bb_IDP_"
-        + subname
-        + "_"
-        + PARC_NAME
-        + "_"
-        + "reparcellation"
+        "$BB_BIN_DIR/bb_IDP/bb_IDP " + subject_,
+        "bb_IDP_" + subject_name + "_" + PARC_NAME + "_" + "reparcellation",
     )
-    print("IDP reparcellation pipeline complete.")
-
-
-
+    logger.info("IDP reparcellation pipeline complete.")
 
     ######
     # QC
     ######
 
 
-    print("Beginning QC reparcellation pipeline...")
-    jobQC = LT.runCommand(
+    logger.info("Beginning QC reparcellation pipeline...")
+    LT.run_command(
         logger,
         " xvfb-run -a $BB_BIN_DIR/tvb_bb_QC/tvb_bb_QC.sh "  # -s '-screen 0 640x480x24'
-        + subject,
-        "tvb_bb_QC_"
-        + subname
-        + "_"
-        + PARC_NAME
-        + "_"
-        + "reparcellation"
+        + subject_,
+        "tvb_bb_QC_" + subject_name + "_" + PARC_NAME + "_" + "reparcellation",
     )
-    print("QC reparcellation pipeline complete.")
+    logger.info("QC reparcellation pipeline complete.")
 
-
-
-    print("Beginning QC html reparcellation dropdown...")
-    jobHTML_reparc = LT.runCommand(
+    logger.info("Beginning QC html reparcellation dropdown...")
+    job_html_reparc = LT.run_command(
         logger,
         " python $BB_BIN_DIR/tvb_bb_QC/html_reparcellation.py "  # -s '-screen 0 640x480x24'
-        + subject
+        + subject_
         + " "
         + PARC_NAME,
         "html_reparcellation_"
-        + subname
+        + subject_name
         + "_"
         + PARC_NAME
         + "_"
-        + "reparcellation"
+        + "reparcellation",
     )
-    # html_reparcellation(subject,PARC_NAME)
-    print("QC html reparcellation dropdown complete.")
 
-    LT.finishLogging(logger)
+    logger.info("QC html reparcellation dropdown complete.")
 
-    return jobHTML_reparc
+    LT.finish_logging(logger)
+
+    return job_html_reparc
 
 
 if __name__ == "__main__":
@@ -210,17 +198,29 @@ if __name__ == "__main__":
 
     fd_fileName = "logs/file_descriptor.json"
 
+
+    outer_logger = LT.init_logging(__file__, subject)
+
     # check if subject directory exists
     if not os.path.isdir(subject):
-        print(f"{subject} is not a valid directory. Exiting")
+        print(
+            outer_logger.format_to_error(f"{subject} is not a valid directory. Exiting")
+        )
         sys.exit(1)
+
     # attempt to open the JSON file
+
+    json_relative_path = f"./{subject}/{fd_fileName}"
     try:
-        json_path = os.path.abspath(f"./{subject}/{fd_fileName}")
-        with open(json_path, "r") as f:
+        json_absolute_path = os.path.abspath(json_relative_path)
+        with open(json_absolute_path, "r") as f:
             fileConfig = json.load(f)
-    except:
-        print(f"{json_path} could not be loaded. Exiting")
+    except Exception:
+        print(
+            outer_logger.format_to_error(
+                f"{json_relative_path} could not be loaded. Exiting"
+            )
+        )
         sys.exit(1)
     # call pipeline
     tvb_reparcellate_pipeline(subject, fileConfig, PARC_NAME)

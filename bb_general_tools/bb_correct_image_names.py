@@ -3,7 +3,7 @@
 # Script name: bb_correct_image_names.py
 #
 # Description:Script to deal with a problem in the DICOM to NIFTI conversion
-#			  that introduces superfluous leading 0s for some numbers.
+# 			  that introduces superfluous leading 0s for some numbers.
 #
 # Authors: Fidel Alfaro-Almagro, Stephen M. Smith & Mark Jenkinson
 #
@@ -28,51 +28,55 @@ import glob
 import time
 import dicom
 import logging
-import sys,argparse,os.path
+import sys, argparse, os.path
 import bb_general_tools.bb_path as bb_path
+
 
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write("error: %s\n" % message)
         self.print_help()
         sys.exit(2)
+
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-def bb_correct_image_names(folder): 
-    
-    possibleExtensions=['.nii', '.nii.gz', '.bval', '.bvec', '.json']
 
-    listFiles=glob.glob(folder + '/*.*')
+def bb_correct_image_names(folder):
+    possibleExtensions = [".nii", ".nii.gz", ".bval", ".bvec", ".json"]
+
+    listFiles = glob.glob(folder + "/*.*")
 
     for fullFileName in listFiles:
-
         try:
-            extension=bb_path.getExt(fullFileName,possibleExtensions)
-            fileName=bb_path.removeExt(fullFileName,possibleExtensions)
+            extension = bb_path.getExt(fullFileName, possibleExtensions)
+            fileName = bb_path.removeExt(fullFileName, possibleExtensions)
         except ValueError:
-            continue        
+            continue
 
-        parts=fileName.split('_')
-        
-        for i,part in enumerate(parts):
+        parts = fileName.split("_")
+
+        for i, part in enumerate(parts):
             try:
-                intPart=int(part)
-                parts[i]=part.lstrip('0')
-        
+                intPart = int(part)
+                parts[i] = part.lstrip("0")
+
             except ValueError:
                 pass
 
-        newFullFileName="_".join(parts)+ extension
+        newFullFileName = "_".join(parts) + extension
         if newFullFileName != fullFileName:
             print("Moving " + fullFileName + " to " + newFullFileName)
-            os.rename(fullFileName,newFullFileName)
- 
+            os.rename(fullFileName, newFullFileName)
+
+
 def main():
-    parser = MyParser(description='BioBank Tool to correct a problem from files coming out of dcm2niix')
-    parser.add_argument('folder', help='Folder to process')
+    parser = MyParser(
+        description="BioBank Tool to correct a problem from files coming out of dcm2niix"
+    )
+    parser.add_argument("folder", help="Folder to process")
 
     argsa = parser.parse_args()
 
@@ -81,7 +85,6 @@ def main():
 
     bb_correct_image_names(folder)
 
+
 if __name__ == "__main__":
     main()
-
-
