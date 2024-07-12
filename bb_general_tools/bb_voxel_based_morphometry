@@ -1,0 +1,369 @@
+#!/bin/bash
+
+#-OVERVIEW-------------------------------------------------------------------------------------------------------------#
+# This script performs the steps involved in voxel based morphometry as implemented by FSL-VBM
+# (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/)
+#
+# The workflow is divided into the following stages:
+#   a) Prepare data for the FSL-VBM study
+#   b) Extracting brain information: fslvbm_1_bet
+#   c) Creating the template: fslvbm_2_template
+#
+# More information on these steps can be found here (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide)
+#
+
+#-FUNCTIONS------------------------------------------------------------------------------------------------------------#
+
+# Description:
+#   collate_t1_data organizes T1 weighted images into the proper directory structure required for VBM processing. This
+#   structure is described in step A) here https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide
+#
+# Inputs:
+#   source        The path of the directory containing the the weighted T1 image data files
+#   destination   The path of the directory where the resulting collated data folder will be located.
+#
+# Data Requirements:
+#   The function assumes that if T1 files belong to a certain group they will be stored at:
+#     source/group_name/subject_name.nii.gz
+#
+#   The group folders should be the only folders in the source directory.
+#
+#   The subject files should be the only files in the group folders.
+#
+#
+# Options:
+#   [-t template_list]  A list of subject file names, one per line, to process.
+#   [-n N]              Samples N subjects from each group.
+#
+#   By default, (i.e. no options specified, M subjects from each group are sampled, where M is the minimum group size
+#   from the set of groups.
+#
+# Output:
+#   Writes to the destination
+#
+# Usage:
+#   collate_T1_data source destination subject_list [-n N] [-t template_list]
+#
+
+function collate_T1_data () {
+  mkdir fsl_vbm_T1s
+
+  # Input validation
+  if [[ $# -ne 2 ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t collate_T1_data source destination"
+    exit 1
+  fi
+
+  source_=$1
+  destination=$2
+
+  if [[ ! -d $source_ ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t collate_T1_data source direction {$source_} not found."
+    exit 1
+  fi
+
+  if [[ ! -d $destination ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t collate_T1_data source direction {$destination} not found."
+    exit 1
+  fi
+
+  # Options handling
+  n_subjects=""
+  template_list=""
+
+  while getopts "n:t:" option; do
+    case $option in
+      n)
+        n_subjects=${OPTARG}
+        ;;
+      t)
+        template_list=${OPTARG}
+        ;;
+      \?)
+        # shellcheck disable=SC2210
+        >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t Invalid option."
+        exit 1;;
+    esac
+  done
+
+  if [[ ! -d "$destination/FSL_VBM_subjects" ]]; then
+    mkdir "FSL_VBM_subs"
+  fi
+
+  # Workflows
+
+  # List all folders in the directory
+  folders=("$source_"/*)
+
+  # option -n: samples N subjects from each group, N is user supplied.
+  if [[ -n "$n_subjects" ]]; then
+
+    for folder in "${folders[@]}"/; do
+      files=("$folder"/*)
+
+      # Get the total number of files in the directory
+      total_files=${#files[@]}
+
+      # Check if there are enough files to sample
+      if ((total_files < n_subjects)); then
+          >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t Note enough files in gsample."
+          exit 1
+      fi
+
+      # Shuffle the array of files randomly
+      shuffled_files=($(shuf -e "${files[@]}"))
+
+      # Sample the first n files from the shuffled array
+      sample=("${shuffled_files[@]:0:n}")
+
+      # Copy the sampled files to the destination folder
+      for file in "${sample[@]}"; do
+        rsync "$file" "$destination/FSL_VBM_subjects/"
+      done
+
+    done
+
+    return 0
+
+  # option -t: template subject list provided
+  elif [[ -n "$template_list" ]]; then
+    rsync --files-from="$template_list" "$source_" "$destination/FSL_VBM_subjects"
+    rsync "$template_list" "$destination/FSL_VBM_subjects/"
+    return 0
+
+  # option default: samples min_count subjects from each group, where min_count is minimum group size
+  else
+    # Find the folder with the fewest files and get the count
+    min_count=$(find "$source_" -mindepth 1 -maxdepth 1 -type d -exec sh -c 'find "$1" -type f | wc -l' _ {} \; | sort -n | head -n 1)
+
+    # Loop through the group folders and randomly sample min_count subjects from each group without replacement
+    for folder in "${folders[@]}"/; do
+        files=("$folder"/*)
+
+        # Shuffle the array of files randomly
+        shuffled_files=($(shuf -e "${files[@]}"))
+
+        # Sample the first min_count files from the shuffled array
+        sample=("${shuffled_files[@]:0:min_count}")
+
+        # Copy the sampled files to the destination folder
+        for file in "${sample[@]}"; do
+          rsync "$file" "$destination/FSL_VBM_subjects/"
+        done
+      return 0
+    done
+  fi
+
+  >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t collate_T1_data failed."
+  exit 1
+}
+
+# Description:
+#   brain_extraction performs brain extraction on the T1 images using FSL's fslvbm_1_bet script as described here
+#     https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide
+#
+# Inputs:
+#   FSL_VBM_directory   The path to FSL_VBM_subjects directory.
+#
+# Options:
+#   -N  For processing images with alot of neck. (See link above)
+#
+#   Default behaviour for fslvbm_1_bet is described here https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide (see B)
+#
+# Output:
+#   Writes to FSL_VBM_directory.
+#
+# Usage:
+#   run_fsl_vbm FSL_VBM_directory [-N]
+#
+
+function brain_extraction () {
+
+  # Input validation
+  if [[ $# -ne 1 ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t brain_extraction FSL_VBM_directory"
+    exit 1
+  fi
+
+  FSL_VBM_directory=$1
+
+  if [[ ! -d $FSL_VBM_directory ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t brain_extraction: FSL_VBM_directory <$FSL_VBM_directory> not found."
+    exit 1
+  fi
+
+  # Options Handling
+  N_option=false
+
+  while getopts "N" option; do
+    case $option in
+      N)
+        N_option=true
+        ;;
+      \?)
+        # shellcheck disable=SC2210
+        >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t Invalid option."
+        exit 1
+        ;;
+    esac
+  done
+
+  # Perform brain extraction using fslvbm_1_bet
+  cwd=$(pwd)
+
+  # option -N: processing images with alot of anatomical neck in the image
+  if [[ $N_option ]]; then
+    cd "$FSL_VBM_directory" || return 1
+    fslvbm_1_bet -N
+  # default option: given by fslvbm_1_bet -b. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide (see B)
+  else
+    cd "$FSL_VBM_directory" || return 1
+    fslvbm_1_bet -b
+  fi
+
+  cd "$cwd" || return 1
+
+  return 0
+}
+
+# Description:
+#   create_GM_template creates the study-specific grey matter (GM) template using FSL's fslvbm_2_template as described
+#   here https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM/UserGuide
+#
+# Inputs:
+#   FSL_VBM_directory   The path to FSL_VBM_subjects directory.
+#
+# Options:
+#   -a  Creates a template based on an affine registration.
+#
+#   By default (i.e. -a not specified) the registration is non-linear.
+#
+# Output:
+#   Writes to the FSL_VBM_directory.
+#
+# Usage:
+#   create_GM_template FSL_VBM_directory [-a]
+#
+
+function create_GM_template () {
+
+  # Input validation
+  if [[ $# -ne 1 ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t create_GM_template FSL_VBM_directory"
+    exit 1
+  fi
+
+  FSL_VBM_directory=$1
+
+  if [[ ! -d $FSL_VBM_directory ]]; then
+    # shellcheck disable=SC2210
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t create_GM_template: FSL_VBM_directory <$FSL_VBM_directory> not found."
+    exit 1
+  fi
+
+  # Options Handling
+  a_option=false
+
+  while getopts "a" option; do
+    case $option in
+      a)
+        a_option=true
+        ;;
+      \?)
+        # shellcheck disable=SC2210
+        >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t Invalid option."
+        exit 1;;
+    esac
+  done
+
+  # Perform brain extraction using fslvbm_2_template
+  cwd=$(pwd)
+
+  # option a: perform affine registration
+  if [[ $a_option ]]; then
+    cd "$FSL_VBM_directory" || return 1
+    fslvbm_2_template -a
+  # default option: perform non-linear registration
+  else
+    cd "$FSL_VBM_directory" || return 1
+    fslvbm_2_template -n
+  fi
+
+  cd "$cwd" || return 1
+
+  return 0
+}
+
+#-MAIN-----------------------------------------------------------------------------------------------------------------#
+
+# Input validation
+if [[ $# -ne 2 ]]; then
+  # shellcheck disable=SC2210
+  >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t bb_voxel_based_morphometry source destination [-n N] [-t template_list] [-N] [-a]"
+  exit 1
+fi
+
+T1_source_folder=$1
+T1_destination_folder=$2
+
+n_subjects=""
+template_list=""
+a_option=false
+N_option=false
+
+
+while getopts "n:t:Na" option; do
+  case $option in
+    n)
+      n_subjects=${OPTARG}
+      ;;
+    t)
+      template_list=${OPTARG}
+      ;;
+    N)
+      N_option=true
+      exit;;
+   a)
+      a_option=true
+      exit;;
+    \?)
+      # shellcheck disable=SC2210
+      >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tError:\t Invalid option."
+      exit 1;;
+  esac
+
+  # A)
+  # Copy folders to submission directory
+  if [[ -z $n_subjects ]]; then
+    collate_T1_data "$T1_source_folder" "$T1_destination_folder" -n n_subjects
+  elif [[ -z $template_list ]]; then
+    collate_T1_data "$T1_source_folder" "$T1_destination_folder" -t "$template_list"
+  else
+    collate_T1_data "$T1_source_folder" "$T1_destination_folder"
+  fi
+
+  # B)
+  # Perform brain extraction
+  if [[ $N_option ]]; then
+    brain_extraction "$destination" -N
+  else
+    brain_extraction "$destination" -N
+  fi
+
+  # C)
+  # Build template
+  if [[ $a_option ]]; then
+    # affine registration
+    create_GM_template "$destination" -a
+  else
+    # nonlinear registration
+    create_GM_template "$destination"
+  fi
+
+done

@@ -4,10 +4,12 @@ import numpy as np
 import sys
 from scipy.stats import zscore
 import matplotlib.pyplot as plt
+
 import matplotlib
 import os
 import copy
 from scipy.stats.stats import pearsonr
+
 
 
 def connectivity_correlation(first_matrix, second_matrix, load):
@@ -44,6 +46,7 @@ if __name__ == "__main__":
     SC, waytotal, fdt_network_matrix for a subject.
 
 
+
     Usage
     ----------
     python  tvb_concat_probtrackx2.py  subj
@@ -56,4 +59,5 @@ if __name__ == "__main__":
 
     """
     # try:
+
     connectivity_correlation(sys.argv[1], sys.argv[2], sys.argv[3])

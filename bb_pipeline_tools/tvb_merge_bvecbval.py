@@ -37,6 +37,7 @@ def merge_bvalbvec(
 if __name__ == "__main__":
     """Function that concatenates bval and bvec values into their respective merged files.
 
+
     Usage
     ----------
     python merge_bvecbval.py bval_file_1 bval_file_2 bvec_file_1 bvec_file_2 bval_output_file bvec_output_file

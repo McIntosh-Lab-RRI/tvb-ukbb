@@ -19,6 +19,7 @@ font = {"size": 100}
 matplotlib.rc("font", **font)
 
 
+
 def SC_FC(subj, subjName, PARC_NAME):
     """Function that generates SC, FC, TL, TS plots for QC html report
     for a subject.
@@ -50,6 +51,7 @@ def SC_FC(subj, subjName, PARC_NAME):
     try:
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
+
                 # import FC and TS data
                 fc_path = os.path.join(
                     subj + "/fMRI/", file, "fc_" + PARC_NAME + ".txt"
@@ -144,6 +146,7 @@ def SC_FC(subj, subjName, PARC_NAME):
     # import SC data
     SC = ""
     try:
+
         SC = np.loadtxt(subj + "/dMRI/sc_" + PARC_NAME + ".txt")
     except:
         print("ERROR: sc file not found")
@@ -151,6 +154,7 @@ def SC_FC(subj, subjName, PARC_NAME):
     # import TL data
     tract_lengths = ""
     try:
+
         tract_lengths = np.loadtxt(subj + "/dMRI/distance_" + PARC_NAME + ".txt")
     except:
         print("ERROR: distance file not found")
@@ -263,4 +267,5 @@ if __name__ == "__main__":
 
     """
     # try:
+
     SC_FC(sys.argv[1], sys.argv[2], sys.argv[3])

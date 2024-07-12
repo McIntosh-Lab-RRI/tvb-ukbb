@@ -3,6 +3,7 @@
 # Script name: consistency_thresholding.py
 #
 #
+
 # Description: Script to consistency threshold a group of processed subjects' structural
 # connectivity matrices.
 #
@@ -10,6 +11,7 @@
 # Usage: python consistency_thresholding.py <zip_dir> <threshold> <subject_list> <PARC_NAME>
 #
 # NOTE: existing tvb_inputs.zip file names should follow the following format:
+
 #
 #                    subjectName_parcellationName_tvb_inputs.zip
 #
@@ -48,6 +50,7 @@ import math
 import matplotlib.pyplot as plt
 
 
+
 def ED_TL_correlation(
     zip_dir, subject_list, PARC_NAME, PARC_LUT, subject_age_list_file
 ):
@@ -57,6 +60,7 @@ def ED_TL_correlation(
 
     Arguments
     ----------
+
     zip_dir :
         path to directory containing tvb_inputs.zip files for all
         subjects to be consistency thresholded
@@ -73,11 +77,13 @@ def ED_TL_correlation(
         thresholded
 
     PARC_NAME :
+
         name of parcellation. use "" if these zip files were created
         with an earlier version of the pipeline that did not specify
         parcellations in tvb_input.zip filenames
 
     """
+
 
     # make output dir
     outputdir = os.path.join(zip_dir, "ED_TL_matrices")
@@ -224,6 +230,7 @@ def ED_TL_correlation(
         # print(connectivity_correlation(ED_array[i],TL_array[i],False))
         # print(connectivity_correlation(ED_array[i],TL_array[i],False)[0])
         # print(decile_array[i])
+
         whole_brain_EDTL.append(
             [
                 decile_array[i],
@@ -284,10 +291,12 @@ if __name__ == "__main__":
         thresholded
 
     PARC_NAME :
+
         name of parcellation. use "" if these zip files were created
         with an earlier version of the pipeline that did not specify
         parcellations in tvb_input.zip filenames
 
     """
     # try:
+
     ED_TL_correlation(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

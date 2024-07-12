@@ -12,6 +12,7 @@ import sys
 import os
 
 
+
 def IDP_html_gen(subj, PARC_NAME):
     """Function that generates the IDP page of the QC report for a
     subject.
@@ -78,6 +79,7 @@ def IDP_html_gen(subj, PARC_NAME):
           <h1 class="w3-hide-medium w3-hide-small w3-xxxlarge">IDP IMAGE REPORT</h1>
           <h5 class="w3-hide-large" style="white-space:nowrap">IDP IMAGE REPORT</h5>
           
+
           <h3 class="w3-hide-medium w3-hide-small">"""
         + subjname
         + """</h3>
@@ -142,6 +144,7 @@ def IDP_html_gen(subj, PARC_NAME):
 	  <h1> IDP REPORTS </h1>
       <h1>
     <div style="font-size: 20px" > Parcellation: <select name="menu1" id="menu1" onkeydown="IgnoreAlpha(event);">
+
       <option selected="selected">"""
         + PARC_NAME
         + """</option>
@@ -315,6 +318,7 @@ def IDP_html_gen(subj, PARC_NAME):
     <br>
 
     <br>
+
     <a href="../../IDP_files_"""
         + PARC_NAME
         + """/" id="hi_IDP" class="w3-bar-item w3-button">High-Priority IDPs: """
@@ -324,6 +328,7 @@ def IDP_html_gen(subj, PARC_NAME):
         + "/priority_IDPs.tsv"
         + """</a>
     <br>
+
     <a href="../../IDP_files_"""
         + PARC_NAME
         + """/" id="new_IDP" class="w3-bar-item w3-button">New TVB IDPs: """
@@ -333,6 +338,7 @@ def IDP_html_gen(subj, PARC_NAME):
         + "/tvb_new_IDPs.tsv"
         + """</a>
     <br>
+
     <a href="../../IDP_files_"""
         + PARC_NAME
         + """/" id="low_IDP" class="w3-bar-item w3-button">Lower-priority IDPs: """
@@ -342,6 +348,7 @@ def IDP_html_gen(subj, PARC_NAME):
         + "/non_priority_IDPs.tsv"
         + """</a>
     <br>
+
 
     <a href="../../IDP_files_"""
         + PARC_NAME
@@ -411,4 +418,5 @@ if __name__ == "__main__":
 
     """
     # try:
+
     IDP_html_gen(sys.argv[1], sys.argv[2])

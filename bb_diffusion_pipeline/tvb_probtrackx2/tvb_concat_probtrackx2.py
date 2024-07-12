@@ -32,6 +32,7 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
     # handles opening of batched outputs
     if batch:
         for m in range(1, 11):
+
             batch_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + "/batch_" + str(m)
 
             if m == 1:
@@ -42,6 +43,7 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
                 way = np.add(way, np.loadtxt(batch_dir + "/waytotal"))
 
     else:
+
         standard_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + ""
 
         fdt = np.loadtxt(standard_dir + "/fdt_network_matrix")
@@ -56,6 +58,7 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
     # symmetrizing matrix
     SC = (SC + SC.T) / 2
 
+
     np.savetxt(subj + "/dMRI/probtrackx_" + PARC_NAME + "/fdt_network_matrix", fdt)
     np.savetxt(subj + "/dMRI/probtrackx_" + PARC_NAME + "/waytotal", way)
     np.savetxt(subj + "/dMRI/sc_" + PARC_NAME + ".txt", SC)
@@ -68,45 +71,44 @@ def tvb_concat_probtrackx2(subj, PARC_NAME, batch=True):
         mtx = ""
         mat_sum = ""
         for m in range(1, 11):
+
             batch_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + "/batch_" + str(m)
 
             if m == 1:
                 mat_lengths = np.loadtxt(batch_dir + "/fdt_network_matrix_lengths")
+                mat_lengths[np.isnan(mat_lengths)] = 0.0
                 fdt1 = np.loadtxt(batch_dir + "/fdt_network_matrix")
                 mtx = np.multiply(fdt1, mat_lengths)
                 mat_sum = fdt1
             else:
                 mat_lengths = np.loadtxt(batch_dir + "/fdt_network_matrix_lengths")
+                mat_lengths[np.isnan(mat_lengths)] = 0.0
                 fdt1 = np.loadtxt(batch_dir + "/fdt_network_matrix")
                 mtx = np.add(mtx, np.multiply(fdt1, mat_lengths))
                 mat_sum = np.add(mat_sum, fdt1)
 
-        tract_lengths = np.divide(mtx, mat_sum)
-        np.savetxt(
-            subj + "/dMRI/probtrackx_" + PARC_NAME + "/fdt_network_matrix_lengths",
-            tract_lengths,
-        )
+        mat_sum_plus_transpose = mat_sum + mat_sum.T 
+        tract_lengths_weighted = np.divide(mtx, mat_sum_plus_transpose)
+        tract_lengths_weighted[np.isnan(tract_lengths_weighted)] = 0.0
 
         # symmetrizing matrix
-        tract_lengths = (tract_lengths + tract_lengths.T) / 2
-        np.savetxt(subj + "/dMRI/distance_" + PARC_NAME + ".txt", tract_lengths)
+        tract_lengths = tract_lengths_weighted + tract_lengths_weighted.T
+        np.savetxt(subj + "/dMRI/distance_"+PARC_NAME+".txt", tract_lengths)
     else:
-        standard_dir = subj + "/dMRI/probtrackx_" + PARC_NAME + ""
+        standard_dir = subj + "/dMRI/probtrackx_"+PARC_NAME+""
 
         mat_lengths = np.loadtxt(standard_dir + "/fdt_network_matrix_lengths")
         fdt1 = np.loadtxt(standard_dir + "/fdt_network_matrix")
-        mtx = np.multiply(fdt1, mat_lengths)
-        mat_sum = fdt1
-
-        tract_lengths = np.divide(mtx, mat_sum)
-        np.savetxt(
-            subj + "/dMRI/probtrackx_" + PARC_NAME + "/fdt_network_matrix_lengths",
-            tract_lengths,
-        )
+        fdt1_plus_transpose = fdt1 + fdt1.T 
+        tract_lengths = mat_lengths
+        tract_lengths[np.isnan(tract_lengths)] = 0.0
+        tract_lengths_weighted = np.divide(np.multiply(tract_lengths,fdt1),fdt1_plus_transpose)
+        tract_lengths_weighted[np.isnan(tract_lengths_weighted)] = 0.0
 
         # symmetrizing matrix
-        tract_lengths = (tract_lengths + tract_lengths.T) / 2
-        np.savetxt(subj + "/dMRI/distance_" + PARC_NAME + ".txt", tract_lengths)
+        tract_lengths = tract_lengths_weighted + tract_lengths_weighted.T
+        np.savetxt(subj + "/dMRI/distance_"+PARC_NAME+".txt", tract_lengths)
+
 
 
 if __name__ == "__main__":

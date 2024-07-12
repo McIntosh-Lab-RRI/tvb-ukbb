@@ -2,6 +2,7 @@
 #
 # Script name: tvb_reparcellate_pipeline.py
 #
+
 # Description: This script will call all the parcellation-specific subpipes required to reparcellate a processed
 # subject.
 #
@@ -14,6 +15,7 @@
 import os.path
 import sys
 import json
+
 import logging
 import bb_logging_tool as LT
 
@@ -67,6 +69,7 @@ def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
     ######
     # STRUCTURAL
     ######
+
     logger.info("Running structural reparcellation pipeline...")
 
     LT.run_command(
@@ -85,6 +88,7 @@ def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
     ######
     # FUNCTIONAL
     ######
+
     logger.info("Beginning functional reparcellation pipeline")
 
     if ("rfMRI" in file_configuration) and (file_configuration["rfMRI"] != ""):
@@ -104,11 +108,13 @@ def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
         logger.error(
             "There is no rFMRI info. Thus, the Resting State part will not be run"
         )
+
     logger.info("Functional reparcellation pipeline complete.")
 
     ######
     # DIFFUSION
     ######
+
 
     logger.info("Beginning diffusion reparcellation pipeline")
 
@@ -140,6 +146,7 @@ def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
     # IDP
     ######
 
+
     logger.info("Running IDP reparcellation pipeline...")
     LT.run_command(
         logger,
@@ -151,6 +158,7 @@ def tvb_reparcellate_pipeline(subject_, file_configuration, PARC_NAME):
     ######
     # QC
     ######
+
 
     logger.info("Beginning QC reparcellation pipeline...")
     LT.run_command(
@@ -189,6 +197,7 @@ if __name__ == "__main__":
     PARC_NAME = sys.argv[2]
 
     fd_fileName = "logs/file_descriptor.json"
+
 
     outer_logger = LT.init_logging(__file__, subject)
 

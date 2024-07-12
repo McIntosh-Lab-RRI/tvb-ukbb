@@ -31,6 +31,7 @@ def FC_distribution(subj, PARC_NAME):
     # import data and generate graphs for fMRI
     # for each ica folder in fMRI
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
@@ -41,6 +42,7 @@ def FC_distribution(subj, PARC_NAME):
                 ts_path = os.path.join(
                     subj + "/fMRI/", file, "ts_" + PARC_NAME + ".txt"
                 )
+
 
                 FC = ""
                 norm_ts = ""
@@ -86,6 +88,7 @@ def FC_distribution(subj, PARC_NAME):
                 print(FC_range)
                 print(FC_proportion_neg)
                 print(FC_distribution_proportion_zero)
+
 
                 write_to_IDP_file(
                     subj,
@@ -226,6 +229,7 @@ def FC_distribution(subj, PARC_NAME):
 
                     squared_error = mean_squared_error(pdf_fitted, y)
                     print("------")
+
                     print("FC_dist", file)
 
                     print("dist: " + dist_name)
@@ -291,6 +295,7 @@ def SC_distribution(subj, PARC_NAME):
     SC[SC == -inf] = "nan"
     SC[SC == inf] = "nan"
 
+
     SC = SC[~np.eye(SC.shape[0], dtype=bool)].reshape(SC.shape[0], -1)
 
     SC_min = np.nanmin(SC)
@@ -324,6 +329,7 @@ def SC_distribution(subj, PARC_NAME):
     print(SC_num_nan)
     print(SC_nan_lines)
     print(SC_distribution_proportion_zero)
+
 
     num_in_cat = 1
     write_to_IDP_file(
@@ -549,6 +555,7 @@ def TL_distribution(subj, PARC_NAME):
     TL[TL == inf] = "nan"
 
     TL = TL[~np.eye(TL.shape[0], dtype=bool)].reshape(TL.shape[0], -1)
+
 
     TL_min = np.nanmin(TL)
     TL_max = np.nanmax(TL)
@@ -776,6 +783,7 @@ def MELODIC_SNR(subj, fix4melviewtxt):
     # import data and generate graphs for fMRI
     # for each ica folder in fMRI
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
@@ -827,6 +835,7 @@ def MELODIC_SNR(subj, fix4melviewtxt):
                             print(file)
                             print(name)
                             print("---------")
+
                             print(p_unknown)
                             print(p_signal)
                             print(p_noise)
@@ -880,6 +889,7 @@ def MELODIC_SNR(subj, fix4melviewtxt):
 
 def MCFLIRT_displacement(subj):
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica") or file.endswith(".feat"):
@@ -1121,7 +1131,7 @@ def homotopic(subj, LUT_txt, PARC_NAME):
     # get the fc value for each pair
     # get distribution of these fc values
 
-    # import SC data
+
     LUT = ""
     try:
         # LUT = np.loadtxt(LUT_txt)
@@ -1160,6 +1170,7 @@ def homotopic(subj, LUT_txt, PARC_NAME):
         counter += 1
 
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
@@ -1214,6 +1225,7 @@ def homotopic(subj, LUT_txt, PARC_NAME):
 
 def fmri_SNR_numvol(subj, BB_BIN_DIR):
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".ica"):
@@ -1298,6 +1310,7 @@ def fmri_SNR_numvol(subj, BB_BIN_DIR):
                 )
                 num_in_cat += 1
 
+
             if file.endswith(".feat"):
                 SNR_result = subprocess.run(
                     [
@@ -1322,6 +1335,7 @@ def fmri_SNR_numvol(subj, BB_BIN_DIR):
                 print("---------")
                 print(file + "_SNR_num_vol")
                 print("---------")
+
                 print(SNR_result)
                 print(numvol_result)
 
@@ -1358,6 +1372,7 @@ def fmri_SNR_numvol(subj, BB_BIN_DIR):
 
 def susceptibility_SNR(subj, BB_BIN_DIR):
     try:
+
         num_in_cat = 1
         susceptibility_mask_gen = subprocess.run(
             [
@@ -1413,6 +1428,7 @@ def susceptibility_SNR(subj, BB_BIN_DIR):
                     print("---------")
                     print(file + "_" + susceptibility_parc + "_susceptibility_SNR")
                     print("---------")
+
                     print(SNR_result)
                     print(clean_SNR_result)
 
@@ -1493,6 +1509,7 @@ def susceptibility_SNR(subj, BB_BIN_DIR):
                     )
                     num_in_cat += 1
 
+
     except:
         print("ERROR: susceptibility SNR error")
 
@@ -1504,6 +1521,7 @@ def susceptibility_SNR(subj, BB_BIN_DIR):
 #             if file.endswith(".ica") or file.endswith(".feat"):
 #                 head_motion = subprocess.run([os.path.join(BB_BIN_DIR, 'tvb_bb_QC/tvb_IDP_func_head_motion.sh'), subj, os.path.join(subj, "fMRI", file, "mc/prefiltered_func_data_mcf_rel_mean.rms")],  stdout=subprocess.PIPE)
 #                 head_motion = head_motion.stdout.decode('utf-8').strip()
+
 
 #                 print("---------")
 #                 print(file + "_func_head_motion")
@@ -1520,6 +1538,7 @@ def susceptibility_SNR(subj, BB_BIN_DIR):
 
 def func_task_activation(subj, BB_BIN_DIR):
     try:
+
         num_in_cat = 1
         for file in sorted(os.listdir(subj + "/fMRI/")):
             if file.endswith(".feat"):
@@ -1538,6 +1557,7 @@ def func_task_activation(subj, BB_BIN_DIR):
                 print("---------")
                 print(file + "_func_task_activation")
                 print("---------")
+
                 print(task_activation)
 
                 write_to_IDP_file(
@@ -1776,6 +1796,7 @@ def all_align_to_T1(subj, BB_BIN_DIR):
             print("---------")
             print(baseDict[file] + "_all_align_to_T1")
             print("---------")
+
             print(align_to_T1)
 
             write_to_IDP_file(
@@ -1976,6 +1997,7 @@ def eddy_outliers(subj, BB_BIN_DIR):
         print("ERROR: tvb_IDP_diff_eddy_outliers error")
 
 
+
 def SNR_CNR(subj, BB_BIN_DIR):
     try:
         num_in_cat = 1
@@ -2028,6 +2050,7 @@ def SNR_CNR(subj, BB_BIN_DIR):
                 )
                 num_in_cat += 1
 
+
     except:
         print("ERROR: SNR_CNR error")
 
@@ -2039,6 +2062,7 @@ def rfMRI_FD_DVARS(subj, BB_BIN_DIR, FSLDIR):
             if file.endswith(".ica"):
                 # SNR_result = subprocess.run([os.path.join(BB_BIN_DIR, 'tvb_bb_QC/tvb_SNR_IDP_gen.sh'), subj, file, os.path.join(subj, "fMRI", file, "filtered_func_data")],  stdout=subprocess.PIPE)
                 # SNR_result = SNR_result.stdout.decode('utf-8').strip()
+
 
                 FD = subprocess.run(
                     [
@@ -2088,6 +2112,7 @@ def rfMRI_FD_DVARS(subj, BB_BIN_DIR, FSLDIR):
                 print("---------")
                 print(file + "_rfMRI_FD_DVARS")
                 print("---------")
+
                 print(FD)
                 print(DVARS)
 
@@ -2210,15 +2235,16 @@ def new_IDP_gen(subj, LUT_txt, BB_BIN_DIR, PARC_NAME, FSLDIR):  # ,fix4melviewtx
 
     fix4melviewtxt = ""
 
+
     all_align_to_T1(subj, BB_BIN_DIR)
     fieldmap_align_to_func(subj, BB_BIN_DIR)
     # func_head_motion(subj, BB_BIN_DIR)
     fmri_SNR_numvol(subj, BB_BIN_DIR)
     susceptibility_SNR(subj, BB_BIN_DIR)
+
     MCFLIRT_displacement(subj)
     MELODIC_SNR(subj, fix4melviewtxt)
     rfMRI_FD_DVARS(subj, PARC_NAME, FSLDIR)
-
     FC_distribution(subj, PARC_NAME)
     homotopic(subj, LUT_txt, PARC_NAME)
 
@@ -2256,6 +2282,7 @@ if __name__ == "__main__":
 
     # TODO: use argparse https://stackoverflow.com/questions/32761999/how-to-pass-an-entire-list-as-command-line-argument-in-python/32763023
     # try:
+
     new_IDP_gen(
         sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
     )  # ,sys.argv[3])

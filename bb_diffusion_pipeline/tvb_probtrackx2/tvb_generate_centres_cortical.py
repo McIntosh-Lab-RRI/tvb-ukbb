@@ -6,6 +6,7 @@ import sys
 import csv
 import os
 
+
 np.set_printoptions(threshold=sys.maxsize)
 
 
@@ -95,4 +96,5 @@ if __name__ == "__main__":
 
     """
     # try:
+
     generate_centres_cortical(sys.argv[1], sys.argv[2], sys.argv[3])

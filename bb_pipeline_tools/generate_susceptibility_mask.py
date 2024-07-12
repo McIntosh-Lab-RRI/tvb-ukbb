@@ -10,6 +10,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def generate_susceptiblity_mask(new_parc, orig_suscep, new_PARC_LUT, new_suscept_name):
+
     datafile = open(new_PARC_LUT, "r")
     datareader = csv.reader(datafile, delimiter="\t")
     ROI_list = []
@@ -22,6 +23,7 @@ def generate_susceptiblity_mask(new_parc, orig_suscep, new_PARC_LUT, new_suscept
 
     suscept_img = nib.load(orig_suscep)
     suscept_data = suscept_img.get_fdata()
+
 
     suscept_mask = np.where(suscept_data > 0, 1, 0)
     new_suscept = 0 * suscept_mask
@@ -49,6 +51,7 @@ def generate_susceptiblity_mask(new_parc, orig_suscep, new_PARC_LUT, new_suscept
 if __name__ == "__main__":
     """Function that generates SC, FC, TL, TS plots for QC html report
     for a subject.
+
 
     Usage
     ----------

@@ -67,6 +67,7 @@ def main(cli_args=None):
     if subject[-1] == "/":
         subject = subject[0 : len(subject) - 1]
 
+
     # LOGGING INITIALIZATION
     logger = logging.getLogger()
     logger.info("Configuring logger...")

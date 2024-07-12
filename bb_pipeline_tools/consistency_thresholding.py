@@ -3,6 +3,7 @@
 # Script name: consistency_thresholding.py
 #
 #
+
 # Description: Script to consistency threshold a group of processed subjects' structural
 # connectivity matrices.
 #
@@ -10,6 +11,7 @@
 # Usage: python consistency_thresholding.py <zip_dir> <threshold> <subject_list> <PARC_NAME>
 #
 # NOTE: existing tvb_inputs.zip file names should follow the following format:
+
 #
 #                    subjectName_parcellationName_tvb_inputs.zip
 #
@@ -45,6 +47,7 @@ import shutil
 import csv
 
 
+
 def consistency_thresholding(
     zip_dir, threshold, subject_list, PARC_NAME, PARC_LUT, ROI_remove
 ):
@@ -54,6 +57,7 @@ def consistency_thresholding(
 
     Arguments
     ----------
+
     zip_dir :
         path to directory containing tvb_inputs.zip files for all
         subjects to be consistency thresholded
@@ -70,11 +74,13 @@ def consistency_thresholding(
         thresholded
 
     PARC_NAME :
+
         name of parcellation. use "" if these zip files were created
         with an earlier version of the pipeline that did not specify
         parcellations in tvb_input.zip filenames
 
     """
+
 
     # make output dir
     outputdir = os.path.join(zip_dir, "thresholded_tvb_inputs")
@@ -109,6 +115,7 @@ def consistency_thresholding(
         for j in range(len(ROI_list)):
             if int(ROIs_to_remove[i]) == int(ROI_list[j][0]):
                 ROIs_to_remove[i] = j
+
 
     consistency_mask = ""
     subcounter = 0
@@ -174,6 +181,7 @@ def consistency_thresholding(
                 np.savetxt(SC_path, SC)
 
                 if np.any(np.isnan(SC)):
+
                     print("found nan in", SC_path)
                 else:
                     # binarize SC and add to consistency mask to track how many subs have a connnection for each connection
@@ -287,6 +295,7 @@ def consistency_thresholding(
                                 np.savetxt(FC_path, FC)
 
                             if os.path.exists(TS_path):
+
                                 TS = np.loadtxt(TS_path)
                                 TS = np.delete(TS, ROIs_to_remove, axis=1)
                                 np.savetxt(TS_path, TS)
@@ -327,6 +336,7 @@ def consistency_thresholding(
 
 
 if __name__ == "__main__":
+
     """Script to consistency threshold a group of processed subjects' structural
      connectivity matrices.
 
@@ -354,12 +364,14 @@ if __name__ == "__main__":
         thresholded
 
     PARC_NAME :
+
         name of parcellation. use "" if these zip files were created
         with an earlier version of the pipeline that did not specify
         parcellations in tvb_input.zip filenames
 
     """
     # try:
+
     consistency_thresholding(
         sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]
     )
