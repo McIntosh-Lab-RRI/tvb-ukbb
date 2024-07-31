@@ -118,7 +118,7 @@ def run_command(logger, command, job_name):
         std_out = open(std_out_file, "w+")
         std_error = open(std_error_file, "w+")
 
-        run(command_list, text=True, stdout=std_out, stderr=std_error)
+        jobOUTPUT=run(command_list, text=True, stdout=std_out, stderr=std_error)
 
         std_out.close()
         std_error.close()
@@ -127,9 +127,13 @@ def run_command(logger, command, job_name):
         logger.info("STANDARD ERROR: " + std_error_file)
 
         logger.info("COMPLETE: " + command.strip())
-
+        jobOUTPUT=jobOUTPUT.decode("UTF-8")
+        
     except Exception as e:
         logger.error("Exception raised during execution of: \n\t" + command.strip())
         logger.error("Exception type: \n\t" + str(type(e)))
         logger.error("Exception args: \n\t" + str(e.args))
         logger.error("Exception message: \n\t" + str(e))
+        jobOUTPUT = ""
+        
+    return jobOUTPUT.strip()
