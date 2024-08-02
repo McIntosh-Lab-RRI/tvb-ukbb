@@ -99,17 +99,17 @@ def run_command(logger, command, job_name):
         logger.info("RUNNING:\n\t" + command.strip())
 
         # create logging directory for the calling module if it doesn't exist.
-        calling_module = "/" + inspect.getmodule(inspect.stack()[1][0]).__name__ + "/"
+        # calling_module = "/" + inspect.getmodule(inspect.stack()[1][0]).__name__ + "/"
 
-        if not os.path.isdir(logger.log_dir + calling_module):
-            os.mkdir(logger.log_dir + calling_module)
+        # if not os.path.isdir(logger.log_dir + calling_module):
+        #     os.mkdir(logger.log_dir + calling_module)
 
         # perform the designated commands and capture output
         std_out_file = (
-            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".o"
+            logger.basedir + "/logs/" + calling_module.split(".")[0] + "/" + job_name + ".o"
         )
         std_error_file = (
-            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".e"
+            logger.basedir + "/logs/" + calling_module.split(".")[0] + "/" + job_name + ".e"
         )
 
         os.makedirs(os.path.dirname(std_out_file), exist_ok=True)
