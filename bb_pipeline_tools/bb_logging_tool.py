@@ -106,10 +106,10 @@ def run_command(logger, command, job_name):
 
         # perform the designated commands and capture output
         std_out_file = (
-            logger.base_dir + "/logs/" + calling_module.split(".")[0] + "/" + job_name + ".o"
+            logger.base_dir + "/logs/" + job_name + ".o"
         )
         std_error_file = (
-            logger.base_dir + "/logs/" + calling_module.split(".")[0] + "/" + job_name + ".e"
+            logger.base_dir + "/logs/" + job_name + ".e"
         )
 
         os.makedirs(os.path.dirname(std_out_file), exist_ok=True)
