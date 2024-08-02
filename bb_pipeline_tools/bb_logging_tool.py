@@ -71,7 +71,7 @@ def init_logging(subject):
 
     logger = logging.getLogger()
     logger.log_dir = os.path.dirname(log_file)
-
+    logger.base_dir = os.getcwd()
     logging.info("Logging directory created at: " + os.getcwd() + "/" + log_file)
 
     return logger
