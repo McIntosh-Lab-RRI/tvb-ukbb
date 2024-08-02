@@ -34,7 +34,7 @@ def bb_pipeline_diff(subject):
     logger = logging.getLogger()
 
     log_dir = logger.log_dir
-    base_dir = logger.base_dir
+    base_dir = logger.base_dir + "/" + subject
 
     subject_name = subject.replace("/", "_")
 
