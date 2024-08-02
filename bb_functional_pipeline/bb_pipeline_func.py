@@ -33,7 +33,7 @@ sys.path.insert(1, os.path.dirname(__file__) + "/..")
 def bb_pipeline_func(subject, file_configuration):
     logger = logging.getLogger()
     log_dir = logger.log_dir
-    base_dir = logger.base_dir
+    base_dir = logger.base_dir + "/" + subject
 
     jobs_to_wait_for = ""
 
