@@ -71,7 +71,8 @@ def init_logging(subject):
 
     logger = logging.getLogger()
     logger.log_dir = os.path.dirname(log_file)
-
+    logger.base_dir = os.getcwd()
+    logger.subject = subject
     logging.info("Logging directory created at: " + os.getcwd() + "/" + log_file)
 
     return logger
@@ -99,17 +100,17 @@ def run_command(logger, command, job_name):
         logger.info("RUNNING:\n\t" + command.strip())
 
         # create logging directory for the calling module if it doesn't exist.
-        calling_module = "/" + inspect.getmodule(inspect.stack()[1][0]).__name__ + "/"
+        # calling_module = "/" + inspect.getmodule(inspect.stack()[1][0]).__name__ + "/"
 
-        if not os.path.isdir(logger.log_dir + calling_module):
-            os.mkdir(logger.log_dir + calling_module)
+        # if not os.path.isdir(logger.log_dir + calling_module):
+        #     os.mkdir(logger.log_dir + calling_module)
 
         # perform the designated commands and capture output
         std_out_file = (
-            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".o"
+            logger.base_dir + "/" + logger.subject + "/logs/" + job_name + ".o"
         )
         std_error_file = (
-            logger.log_dir + "/" + calling_module.split(".")[0] + "/" + job_name + ".e"
+            logger.base_dir + "/" + logger.subject + "/logs/" + job_name + ".e"
         )
 
         os.makedirs(os.path.dirname(std_out_file), exist_ok=True)
@@ -118,7 +119,7 @@ def run_command(logger, command, job_name):
         std_out = open(std_out_file, "w+")
         std_error = open(std_error_file, "w+")
 
-        run(command_list, text=True, stdout=std_out, stderr=std_error)
+        jobOUTPUT=run(command_list, text=True, stdout=std_out, stderr=std_error)
 
         std_out.close()
         std_error.close()
@@ -127,9 +128,13 @@ def run_command(logger, command, job_name):
         logger.info("STANDARD ERROR: " + std_error_file)
 
         logger.info("COMPLETE: " + command.strip())
-
+        jobOUTPUT=jobOUTPUT.decode("UTF-8")
+        
     except Exception as e:
         logger.error("Exception raised during execution of: \n\t" + command.strip())
         logger.error("Exception type: \n\t" + str(type(e)))
         logger.error("Exception args: \n\t" + str(e.args))
         logger.error("Exception message: \n\t" + str(e))
+        jobOUTPUT = ""
+        
+    return jobOUTPUT.strip()
