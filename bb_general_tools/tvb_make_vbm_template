@@ -325,7 +325,7 @@ else
   # Input validation
   if [[ $# -ne 2 ]]; then
     # shellcheck disable=SC2210
-    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t bb_voxel_based_morphometry source destination [-n N] [-t template_list] [-N] [-a]"
+    >&2 echo -e "$(date '+%Y-%m-%d %H:%M:%S'):\n\tUsage:\t tvb_make_vbm_template source destination [-n N] [-t template_list] [-N] [-a]"
     exit 1
   fi
   

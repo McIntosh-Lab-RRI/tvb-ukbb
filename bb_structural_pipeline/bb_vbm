@@ -35,7 +35,7 @@ if [ -f $GM_file ] ; then
         mkdir $VBM_dir
     fi
 
-    ${FSLDIR}/bin/fsl_reg $GM_file $templ/template_GM $VBM_dir/T1_GM_to_template_GM -fnirt "--config=GM_2_MNI152GM_2mm.cnf --jout=$VBM_dir/T1_GM_JAC_nl --logout=$1/logs/bb_vbm_fnirt.log"; 
+    ${FSLDIR}/bin/fsl_reg $GM_file $templ/ADNI3_template_GM $VBM_dir/T1_GM_to_template_GM -fnirt "--config=GM_2_MNI152GM_2mm.cnf --jout=$VBM_dir/T1_GM_JAC_nl --logout=$1/logs/bb_vbm_fnirt.log"; 
     $FSLDIR/bin/fslmaths $VBM_dir/T1_GM_to_template_GM -mul $VBM_dir/T1_GM_JAC_nl $VBM_dir/T1_GM_to_template_GM_mod -odt float
 fi
 
