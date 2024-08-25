@@ -53,6 +53,33 @@ if [ -f $baseSWI/T2star_to_T1.nii.gz ] ; then
   fi
 fi
 
+
+# Extract line numbers where the second column contains "lh" or "rh"
+lh_rh_lines=$(awk -F'\t' '$2 ~ /lh|rh/ {print NR}' $PARC_LUT)
+
+if [ -f $baseSWI/T2star_to_T1.nii.gz ] ; then
+  if [ -f $baseT1/T1_first/T1_first_all_fast_firstseg.nii.gz ] ; then
+    vals=`fslstats -K $baseT1/T1_first/T1_first_all_fast_firstseg $baseSWI/T2star_to_T1 -p 50 `
+    
+    # Generate the dynamic print command based on the selected line numbers
+    awk_command=''
+    # Start building the awk command
+    awk_command='awk '\''{print'
+    
+    # Add the desired fields to the print statement
+    for line in $lh_rh_lines; do
+        awk_command="$awk_command \$$line"
+    done
+    
+    # Close the print statement and the awk command
+    awk_command="${awk_command}}'"
+    
+    # Execute the command using eval
+    result=$(echo $vals | eval $awk_command)
+    
+  fi
+fi
+
 mkdir -p IDP_files
 
 echo $result > IDP_files/$scriptName.txt
