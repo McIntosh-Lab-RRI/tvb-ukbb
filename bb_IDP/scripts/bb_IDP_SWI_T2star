@@ -58,7 +58,7 @@ if [ -f $baseSWI/T2star_to_T1.nii.gz ] ; then
     
     # Add the desired fields to the print statement
     for line in $lh_rh_lines; do
-        awk_command="$awk_command \$$line"
+        awk_command="$awk_command \$$line \" \""
     done
     
     # Close the print statement and the awk command
