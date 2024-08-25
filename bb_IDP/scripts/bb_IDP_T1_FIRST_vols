@@ -37,9 +37,23 @@ for i in $(seq 1 $numVars) ; do
     result="NaN $result" ; 
 done 
 
+lh_rh_lines=$(awk -F'\t' '$2 ~ /lh|rh/ {print NR}' $PARC_LUT)
+
+# Generate the dynamic print command based on the selected line numbers
+awk_command=''
+# Start building the awk command
+awk_command='awk '\''{print'
+
+# Add the desired fields to the print statement
+for line in $lh_rh_lines; do
+    awk_command="$awk_command \$$line"
+done
+
+# Close the print statement and the awk command
+awk_command="${awk_command}}'"
 
 if [ -f $baseT1/T1_first/T1_first_all_fast_firstseg.nii.gz ] ; then
-    result=`${FSLDIR}/bin/fslstats $baseT1/T1_first/T1_first_all_fast_firstseg -H 58 0.5 58.5 | sed 's/\.000000//g' | awk 'BEGIN { ORS = " " } { print }'| awk '{print $10 " " $49 " " $11 " " $50 " " $12 " " $51 " " $13 " " $52 " " $17 " " $53 " " $18 " " $54 " " $26 " " $58 " " $16 }' `
+    result=`${FSLDIR}/bin/fslstats $baseT1/T1_first/T1_first_all_fast_firstseg -H 58 0.5 58.5 | sed 's/\.000000//g' | awk 'BEGIN { ORS = " " } { print }'| eval $awk_command `
 fi
 
 mkdir -p IDP_files
