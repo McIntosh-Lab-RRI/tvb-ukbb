@@ -89,7 +89,7 @@ if [[ -d "$2" ]]; then
 fi
 
 
-tar -cf --ignore-failed-read $origDir/${sub}.tar $sub/QC* $sub/logs$fMRI_files $sub/IDP_files*/*.txt $sub/IDP_files*/*.tsv
+tar --ignore-failed-read -cf $origDir/${sub}.tar $sub/QC* $sub/logs$fMRI_files $sub/IDP_files*/*.txt $sub/IDP_files*/*.tsv
 #may need --ignore-failed-read option for non existent files/folders
 
 if [[ -d "$2" ]]; then
