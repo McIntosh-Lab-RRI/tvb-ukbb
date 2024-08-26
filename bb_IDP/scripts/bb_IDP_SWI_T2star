@@ -62,7 +62,7 @@ if [ -f $baseSWI/T2star_to_T1.nii.gz ] ; then
     done
     
     # Close the print statement and the awk command
-    awk_command="${awk_command}}'"
+    awk_command="${awk_command% \" \"} }'"
     
     # Execute the command using eval
     result=$(echo $vals | eval $awk_command)
