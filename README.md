@@ -23,7 +23,7 @@ We release bugfixes and introduce new features on a rolling basis. If you have b
 Documentation
 -------------
 
-The original `UK_biobank_pipeline` is explained in detail in the paper [Image Processing and Quality Control for the first 10,000 Brain Imaging Datasets from UK Biobank](http://www.biorxiv.org/content/early/2017/04/24/130385).
+The original `UK_biobank_pipeline` is explained in detail in the paper [Image Processing and Quality Control for the first 10,000 Brain Imaging Datasets from UK Biobank](https://www.sciencedirect.com/science/article/pii/S1053811917308613).
 
 Tractography for connectome construction is based on methods validated using tracer data in macaques (see Shen et al. 2019 https://doi.org/10.1016/j.neuroimage.2019.02.018).
 
