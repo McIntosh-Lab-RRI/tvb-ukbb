@@ -28,31 +28,32 @@ def IDP_T1_GM_parc_gen(PARC_LUT, IDP_file, parcel_to_T1, pve_1):
     with open(PARC_LUT) as f:
         lines = f.read().splitlines()
 
-    ROI_num_list = []
+    ROI_list = []
     for line in lines:
-        ROI_num_list.append(int(line.split("\t")[0]))
+        ROI_num, ROI_name = line.split("\t")[0], line.split("\t")[1]
+        ROI_list.append((int(ROI_num), ROI_name))
 
-    for x in ROI_num_list:
-        num_voxels_in_ROI = np.count_nonzero(parcel_data == x)
+    for ROI_num, ROI_name in ROI_list:
+        num_voxels_in_ROI = np.count_nonzero(parcel_data == ROI_num)
 
         bb_IDP_T1_GM_parcellation = "NaN"
 
         if num_voxels_in_ROI != 0:
-            ROI_voxels = np.where(parcel_data == x)
+            ROI_voxels = np.where(parcel_data == ROI_num)
             mean_intensity_in_ROI = np.mean(GM_data[ROI_voxels])
-
-            bb_IDP_T1_GM_parcellation = num_voxels_in_ROI * mean_intensity_in_ROI
-
+            if "lh" not in ROI_name and "rh" not in ROI_name:
+                bb_IDP_T1_GM_parcellation = "NaN"
+            else:
+                bb_IDP_T1_GM_parcellation = num_voxels_in_ROI * mean_intensity_in_ROI
+        
         if result == "":
             result = str(bb_IDP_T1_GM_parcellation)
         else:
             result = result + " " + str(bb_IDP_T1_GM_parcellation)
 
     result = result + "\n"
-    f = open(IDP_file, "w")
-    f.write(result)
-    f.close()
-
+    with open(IDP_file, "w") as f:
+        f.write(result)
 
 if __name__ == "__main__":
     """Function that reorganizes pve files that have been mislabelled.
