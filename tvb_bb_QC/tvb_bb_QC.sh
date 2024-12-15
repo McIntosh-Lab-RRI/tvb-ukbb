@@ -101,6 +101,15 @@ rm -f $dirSubject"/QC/html/image_gen_links.js"
 
 		#$BB_BIN_DIR/tvb_bb_QC/image_gen_link.sh $dirSubject "uw_under" "../../T1/T1.nii.gz" "NA10" "NA10_link" "NA11" "NA11_link" 0
 
+	#VBM parcel unmasked
+		$BB_BIN_DIR/tvb_bb_QC/lightbox.sh -q random_big /T1/transforms/parcel_to_T1_${PARC_NAME}.nii.gz $dirSubject  VBM_parcel_unmasked
+
+                $BB_BIN_DIR/tvb_bb_QC/image_gen_link.sh $dirSubject "vbm_under" "../../T1/transforms/parcel_to_T1_${PARC_NAME}.nii.gz" "NA35" "NA35_link" "NA36" "NA36_link" 0
+
+	#VBM GM overlay
+		$BB_BIN_DIR/tvb_bb_QC/lightbox.sh -o /T1/T1_fast/T1_brain_pve_1.nii.gz -a 95.0 -p greyscale -q random_big /T1/transforms/parcel_to_T1_${PARC_NAME}.nii.gz $dirSubject  VBM_parcel_GM_overlay
+
+                $BB_BIN_DIR/tvb_bb_QC/image_gen_link.sh $dirSubject "vbm_under" "../../T1/transforms/parcel_to_T1_${PARC_NAME}.nii.gz" "vbm_over1" "../../T1/T1_fast/T1_brain_pve_1.nii.gz" "NA37" "NA37_link" 0
 
 ### T1 REGISTRATION ###
 
@@ -187,7 +196,7 @@ rm -f $dirSubject"/QC/html/image_gen_links.js"
 	echo "STARTING dMRI EXTRACTION -------"
 
 	#dMRI extraction unmasked
-		$BB_BIN_DIR/tvb_bb_QC/lightbox.sh -b 62.718401747457314 -c 96.08735171986915 /dMRI/dMRI/data_B0.nii.gz $dirSubject dMRI_extraction_unmasked
+		$BB_BIN_DIR/tvb_bb_QC/lightbox.sh -b 62.718401747457314 -c 95.08735171986915 /dMRI/dMRI/data_B0.nii.gz $dirSubject dMRI_extraction_unmasked
 
 
 

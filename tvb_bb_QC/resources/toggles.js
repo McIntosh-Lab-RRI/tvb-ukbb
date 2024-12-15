@@ -248,6 +248,9 @@ c 3rd ori or b=2000  (if not hidden)
         if(ana=="us" || ana == "ls" || ana == "dxc" || ana == "dfs" || ana == "dfsrb"){
           ana="under_sub"
         }
+	else if(ana=="vbm"){
+	  ana="under_vbm"
+	}
         else if(ana=="Tbi"){
           ana="under_T2"
         }

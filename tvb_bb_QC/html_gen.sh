@@ -272,6 +272,7 @@ cat > $subjdir$html_output_dir"/anat.html" << EOF
       <option value="lc">T1 Labelled GM</option>
       <option value="us">T1 Unlabelled subcort GM</option>
       <option value="ls">T1 Labelled subcort GM</option>
+      <option value="vbm">VBM - Parcellation and GM</option>
     </optgroup>
     <optgroup label="T2 FLAIR">
       <option value="Tre">T2 Registration</option>
@@ -351,6 +352,10 @@ NOTE: Image sizes and therefore maintaining zooms between different analyses can
   <img src="../images/T1_extraction_unmasked/${sub}_T1_extraction_unmasked_sagittal.png" id="under_s" style="display: none">
 
 
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_unmasked_axial.png" id="under_vbm_a" style="display: none">
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_unmasked_coronal.png" id="under_vbm_c" style="display: none">
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_unmasked_sagittal.png" id="under_vbm_s" style="display: none">
+
   <!-- UNMASKED UNDERLAY SUBCORT -->
 
   <img src="../images/T1_segmentation_unmasked_subcort/${sub}_T1_segmentation_unmasked_subcort_axial_appended.png" id="under_sub_a" style="display: none">
@@ -361,6 +366,7 @@ NOTE: Image sizes and therefore maintaining zooms between different analyses can
   <img src="../images/T2_FLAIR_BIANCA_unmasked/${sub}_T2_FLAIR_BIANCA_unmasked_axial.png" id="under_T2_a" style="display: none">
   <img src="../images/T2_FLAIR_BIANCA_unmasked/${sub}_T2_FLAIR_BIANCA_unmasked_coronal.png" id="under_T2_c" style="display: none">
   <img src="../images/T2_FLAIR_BIANCA_unmasked/${sub}_T2_FLAIR_BIANCA_unmasked_sagittal.png" id="under_T2_s" style="display: none">
+
 
 
 <!-------------- OVERLAYS -------------->
@@ -385,6 +391,9 @@ NOTE: Image sizes and therefore maintaining zooms between different analyses can
   <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_T1_segmentation_unlabelled_subcort_GM_coronal_appended.png" id="us_c" style="display: none">
   <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_T1_segmentation_unlabelled_subcort_GM_sagittal_appended.png" id="us_s" style="display: none">
 
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_GM_overlay_axial.png" id="vbm_a" style="display: none">
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_GM_overlay_coronal.png" id="vbm_c" style="display: none">
+  <img src="../images/T1_segmentation_unlabelled_subcort_GM/${sub}_VBM_parcel_GM_overlay_sagittal.png" id="vbm_s" style="display: none">
 
   <img src="../images/T1_segmentation_labelled_subcort_GM/${sub}_T1_segmentation_labelled_subcort_GM_axial_appended.png" id="ls_a" style="display: none">
   <img src="../images/T1_segmentation_labelled_subcort_GM/${sub}_T1_segmentation_labelled_subcort_GM_coronal_appended.png" id="ls_c" style="display: none">
