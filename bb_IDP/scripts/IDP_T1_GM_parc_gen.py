@@ -41,7 +41,7 @@ def IDP_T1_GM_parc_gen(PARC_LUT, IDP_file, parcel_to_T1, pve_1):
         if num_voxels_in_ROI != 0:
             ROI_voxels = np.where(parcel_data == ROI_num)
             mean_intensity_in_ROI = np.mean(GM_data[ROI_voxels])
-            if "lh" not in ROI_name and "rh" not in ROI_name:
+            if "lh" in ROI_name and "rh" in ROI_name:
                 bb_IDP_T1_GM_parcellation = "NaN"
             else:
                 bb_IDP_T1_GM_parcellation = num_voxels_in_ROI * mean_intensity_in_ROI
