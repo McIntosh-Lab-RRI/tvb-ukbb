@@ -25,7 +25,7 @@ if [ -d $1/fMRI/rfMRI.ica ] ; then
     ${FSLDIR}/bin/imcp ${origDir}/$1/T1/T1_fast/T1_brain_pveseg reg/highres_pveseg
     # ${FSLDIR}/bin/imcp $1/T1/T1_fast/T1_brain_pveseg reg/highres_pveseg
     ${FSLDIR}/bin/invwarp --ref=reg/example_func -w reg/example_func2standard_warp -o reg/standard2example_func_warp
-    ${FSL_FIXDIR}/fix . ${FSL_FIXDIR}/training_files/${TRAINING_FILE} 30 -m -h 100
+    ${FSL_FIXDIR}/fix . ${FSL_FIXDIR}/training_files/${TRAINING_FILE} 30 -m -h 100 -A
 
     mkdir -p reg_standard
     ${FSLDIR}/bin/applywarp --ref=reg/standard --in=filtered_func_data_clean --out=reg_standard/filtered_func_data_clean --warp=reg/example_func2standard_warp --interp=spline
